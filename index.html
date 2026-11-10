@@ -83,6 +83,12 @@ h1{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:clamp(36px,4.2
 .flick .ic{width:22px;height:22px;border-radius:50%;background:var(--flam);display:grid;place-items:center}
 .flick a{font-size:13px;color:var(--ink2);text-decoration:none;border-bottom:1px solid rgba(255,230,220,.3);padding-bottom:1px}
 .flick a:hover{color:#fff;border-color:#fff}
+.flickRow{margin-top:22px}
+.flickRow .k{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+.flickRow .flick{margin-top:10px;gap:8px}
+.fchip{cursor:pointer;min-height:38px;transition:background .25s,border-color .25s,transform .25s var(--ease)}
+.fchip:hover{background:rgba(70,26,20,.7);border-color:rgba(255,220,205,.3);transform:translateY(-1px)}
+.fchip:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 .ctrl{display:flex;gap:10px;margin-top:26px;align-items:center}
 .btn{min-height:48px;padding:0 22px;border-radius:99px;border:1px solid var(--edge);background:var(--glass2);cursor:pointer;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:10px;transition:transform .25s var(--ease),background .25s,box-shadow .25s}
 .btn:hover{transform:translateY(-1px);background:rgba(255,236,226,.16)}
@@ -146,11 +152,29 @@ body.m .screen{border-radius:0}
 .fl img{height:13px;width:auto;display:block}
 .slotTitle{font-size:15.5px;font-weight:700;color:#1b1b1b;letter-spacing:-.01em}
 .spons{margin-left:auto;font-size:10.5px;color:#6b6b6b;font-weight:600}
-.slot{position:relative;border-radius:18px;overflow:hidden;background:#170A07;width:100%;transform:translateZ(0)}
-.slot.v{width:56%}
-.slotRow{display:flex;gap:12px;align-items:flex-start}
-.slotSide{flex:1;color:#2a2a2a;font-size:12.5px;line-height:1.5;padding-top:2px}
-.slotSide strong{display:block;font-size:15px;margin-bottom:6px;color:#111}
+/* swipeable row of Flicks */
+.carBox{position:relative}
+.car{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -12px;padding:0 12px;scroll-padding:0 12px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.car::-webkit-scrollbar{display:none}
+.slot{position:relative;flex:none;height:var(--ch,318px);width:auto;scroll-snap-align:start;border-radius:18px;overflow:hidden;background:#170A07;transform:translateZ(0)}
+.car.nudge .slot{animation:nudge 1.5s .7s var(--ease) 2}
+@keyframes nudge{0%,100%{transform:translateX(0)}35%{transform:translateX(-36px)}}
+.carFoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:0 2px;min-height:30px}
+.dots{display:flex;gap:5px;align-items:center}
+.dots i{width:6px;height:6px;border-radius:99px;background:#d9d0cc;transition:width .35s var(--ease),background .35s}
+.dots i.on{width:18px;background:#170A07}
+.swipe{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#4a3a36;border:0;background:#f3ecea;border-radius:99px;padding:0 12px 0 10px;min-height:30px;cursor:pointer;transition:opacity .4s var(--ease),transform .4s var(--ease)}
+.swipe svg{animation:hand 1.6s ease-in-out infinite}
+@keyframes hand{0%,100%{transform:translateX(5px)}50%{transform:translateX(-5px)}}
+.swipe.gone{opacity:0;transform:translateX(8px);pointer-events:none}
+.count{font-size:11.5px;font-weight:600;color:#7a6a66;font-variant-numeric:tabular-nums}
+.carNav{position:absolute;top:calc(var(--ch,318px)/2 - 18px);z-index:4;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.94);box-shadow:0 6px 18px rgba(23,10,7,.25);display:none;place-items:center;cursor:pointer;transition:opacity .3s}
+.carNav.prev{left:-4px}.carNav.next{right:-4px}
+.carNav:disabled{opacity:0;pointer-events:none}
+@media (hover:hover) and (pointer:fine){.carNav{display:grid}}
+.slot.tall .pbar{flex-direction:column;align-items:flex-start;gap:8px}
+.poster .np.v1{background:radial-gradient(90% 70% at 80% 10%,#B5DFC6 0%,#4f6b5c 30%,#1f1714 70%,#120605 100%)}
+.poster .np.v2{background:radial-gradient(90% 70% at 30% 90%,#EEF0B4 0%,#8a6a3a 30%,#2a120c 70%,#120605 100%)}
 .poster{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;cursor:pointer;background:#170A07;display:block;overflow:hidden;transition:opacity .45s var(--ease),transform .45s var(--ease)}
 .poster.gone{opacity:0;transform:scale(1.04);pointer-events:none}
 .poster>img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.02);animation:kb 9s ease-in-out infinite alternate}
@@ -160,7 +184,6 @@ body.m .screen{border-radius:0}
 .poster .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,6,5,.0) 35%,rgba(18,6,5,.85) 100%)}
 .chipT{position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(18,6,5,.66);color:#F3E6C8;padding:5px 9px;border-radius:99px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .pbar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border-radius:16px;background:rgba(18,6,5,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,220,205,.16);text-align:left}
-.slot.v .pbar{flex-direction:column;align-items:flex-start;gap:8px}
 .playB{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,#fff,#F6D2C4);box-shadow:0 0 0 0 rgba(242,195,178,.7);animation:pp 1.8s infinite}
 @keyframes pp{0%{box-shadow:0 0 0 0 rgba(242,195,178,.6)}70%{box-shadow:0 0 0 16px rgba(242,195,178,0)}100%{box-shadow:0 0 0 0 rgba(242,195,178,0)}}
 .pbar .t1{display:block;color:#fff;font-weight:700;font-size:13.5px;line-height:1.25}
@@ -221,13 +244,24 @@ const FLICKS = {
   eye:{id:'it6hi9',ar:[1080,1080],name:'Eyeshadow Makeup Swap',url:'https://flicks.flamapp.ai/flicks/6ad327ebed871ac8bb26e6c4'}
 };
 
+// Category label + what swaps, for every card after the first in a row.
+const FCOPY = {
+  juice:{cat:'Juices',swap:'Flavour swaps, same scene.'},
+  can:{cat:'Beverages',swap:'The can swaps, same scene.'},
+  cereal:{cat:'Breakfast',swap:'Cereal pack swaps, breakfast stays.'},
+  necklace:{cat:'Jewellery',swap:'Model stays, necklace swaps.'},
+  lip:{cat:'Lip colour',swap:'Same model, every shade.'},
+  eye:{cat:'Eye makeup',swap:'Same model, the look swaps.'}
+};
+const swiped = new Set(); // slots the viewer has already swiped, so the hint stops nudging
 const SLOTS = {
-  home:{flick:'juice',title:'Festive masthead',spons:'Sponsored',poster:'home_mast',t1:'See this masthead as a Flick',t2:'Same scene. Each sponsor’s product swaps in.'},
-  brand:{flick:'can',title:'Brand of the Day',spons:'Brand store',poster:'brand_hero',t1:'See this hero as a Flick',t2:'The pack swaps through the range in one video.'},
-  pdp:{flick:'necklace',title:'Complete the gift',spons:'Sponsored',poster:null,vertical:true,t1:'Play Flick',t2:'Model stays, necklace swaps.',side:'<strong>Gifting for your sister?</strong>Pair this gift box with a piece from the Jewellery Collection. Tap the Flick and swap styles on the same model.'},
-  search:{flick:'lip',title:'Trending in Beauty',spons:'Sponsored',poster:'se_banner',t1:'See this banner as a Flick',t2:'Same model, every shade in the range.'},
-  cat:{flick:'eye',title:'Beauty & Personal Care',spons:'Sponsored',poster:null,t1:'Play the category Flick',t2:'Swap the look, keep the model and scene.'},
-  sb:{flick:'cereal',title:'Restock your breakfast',spons:'Sponsored',poster:null,t1:'Play the replenishment Flick',t2:'The cereal pack swaps, the breakfast scene stays.'}
+  // flicks: the swipeable row for this slot, first one leads. ch: card height in px.
+  home:{flicks:['juice','can','cereal'],ch:318,title:'Festive masthead',spons:'Sponsored',poster:'home_mast',t1:'See this masthead as a Flick',t2:'Same scene. Each sponsor’s product swaps in.'},
+  brand:{flicks:['can','juice','cereal'],ch:318,title:'Brand of the Day',spons:'Brand store',poster:'brand_hero',t1:'See this hero as a Flick',t2:'The pack swaps through the range in one video.'},
+  pdp:{flicks:['necklace','lip','eye'],ch:330,title:'Complete the gift',spons:'Sponsored',poster:null,t1:'Play the gifting Flick',t2:'Model stays, necklace swaps.'},
+  search:{flicks:['lip','eye','necklace'],ch:318,title:'Trending in Beauty',spons:'Sponsored',poster:'se_banner',t1:'See this banner as a Flick',t2:'Same model, every shade in the range.'},
+  cat:{flicks:['eye','lip','necklace'],ch:318,title:'Beauty & Personal Care',spons:'Sponsored',poster:null,t1:'Play the category Flick',t2:'Swap the look, keep the model and scene.'},
+  sb:{flicks:['cereal','juice','can'],ch:318,title:'Restock your breakfast',spons:'Sponsored',poster:null,t1:'Play the replenishment Flick',t2:'The cereal pack swaps, the breakfast scene stays.'}
 };
 
 const NAVHOT = ()=>[
@@ -307,9 +341,9 @@ function flickDoc(f){
     '<script src="https://flicks.flamapp.live/'+f.id+'/embed.js" async><\/script>'+
     '<flam-embed id="'+f.id+'" style="aspect-ratio:'+f.ar[0]+'/'+f.ar[1]+';width:100%"></flam-embed></body></html>';
 }
-function startFlick(slotKey, box){
+function startFlick(flickKey, box){
   stopFlick();
-  const f = FLICKS[SLOTS[slotKey].flick];
+  const f = FLICKS[flickKey];
   const poster = box.querySelector('.poster');
   poster.classList.add('gone');
   const spin = el('div',{class:'loading'},'<span></span>');
@@ -355,20 +389,72 @@ function addHots(container, piece, hots, oy=0){
   });
 }
 const PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="#170A07"/></svg>';
-function slotNode(key){
-  const s = SLOTS[key], f = FLICKS[s.flick];
-  const wrap = el('div',{class:'slotWrap'});
-  wrap.appendChild(el('div',{class:'slotHead'},`<span class="fl"><img src="${FLAMLOGO}" alt="">FLICKS</span><span class="slotTitle">${s.title}</span><span class="spons">${s.spons}</span>`));
-  const box = el('div',{class:'slot'+(s.vertical?' v':'')});
+const ARROW = d => `<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="${d<0?'M15 5l-7 7 7 7':'M9 5l7 7-7 7'}" fill="none" stroke="#170A07" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const HAND = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-1.2a5 5 0 0 1-3.9-1.9L4.6 15.4a1.5 1.5 0 0 1 2.3-1.9L9 15.5" fill="none" stroke="#4a3a36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function cardNode(slotKey, flickKey, i){
+  const s = SLOTS[slotKey], f = FLICKS[flickKey];
+  const lead = i===0;
+  const box = el('div',{class:'slot'+(f.ar[1]>f.ar[0]?' tall':''),'data-i':i});
   box.style.aspectRatio = f.ar[0]+'/'+f.ar[1];
+  const art = lead && s.poster ? `<img src="${IMG[s.poster]}" alt=""><span class="shade"></span><span class="chipT">Today · static ad</span>`
+                               : `<span class="np${i?' v'+(i%3):''}"></span>`;
+  const t1 = lead ? s.t1 : `Next brand · ${FCOPY[flickKey].cat}`;
+  const t2 = lead ? s.t2 : FCOPY[flickKey].swap;
   const poster = el('button',{type:'button',class:'poster','aria-label':`Play ${f.name}`});
-  poster.innerHTML = (s.poster?`<img src="${IMG[s.poster]}" alt=""><span class="shade"></span><span class="chipT">Today · static ad</span>`:'<span class="np"></span>') +
-    `<span class="pbar"><span class="playB">${PLAY}</span><span><span class="t1">${s.t1}</span><span class="t2">${f.name} · ${s.t2}</span></span></span>`;
-  poster.addEventListener('click', ()=>startFlick(key, box));
+  poster.innerHTML = art + `<span class="pbar"><span class="playB">${PLAY}</span><span><span class="t1">${t1}</span><span class="t2">${f.name} · ${t2}</span></span></span>`;
+  poster.addEventListener('click', ()=>startFlick(flickKey, box));
   box.appendChild(poster);
-  if(s.vertical){ const row = el('div',{class:'slotRow'}); row.append(box, el('div',{class:'slotSide'},s.side)); wrap.appendChild(row); }
-  else wrap.appendChild(box);
+  return box;
+}
+function slotNode(key){
+  const s = SLOTS[key], n = s.flicks.length;
+  const wrap = el('div',{class:'slotWrap','data-slot':key});
+  wrap.style.setProperty('--ch', s.ch+'px');
+  wrap.appendChild(el('div',{class:'slotHead'},`<span class="fl"><img src="${FLAMLOGO}" alt="">FLICKS</span><span class="slotTitle">${s.title}</span><span class="spons">${s.spons}</span>`));
+  const carBox = el('div',{class:'carBox'});
+  const car = el('div',{class:'car','aria-label':`${s.title}: ${n} Flicks, swipe for more`});
+  s.flicks.forEach((fk,i)=>car.appendChild(cardNode(key, fk, i)));
+  const prev = el('button',{type:'button',class:'carNav prev','aria-label':'Previous Flick'},ARROW(-1));
+  const next = el('button',{type:'button',class:'carNav next','aria-label':'Next Flick'},ARROW(1));
+  carBox.append(car, prev, next);
+  wrap.appendChild(carBox);
+  const foot = el('div',{class:'carFoot'});
+  const dots = el('div',{class:'dots','aria-hidden':'true'}, s.flicks.map((_,i)=>`<i${i?'':' class="on"'}></i>`).join(''));
+  const right = swiped.has(key) ? el('span',{class:'count'},`1 / ${n}`)
+                                : el('button',{type:'button',class:'swipe'},`${HAND}Swipe for ${n-1} more Flicks`);
+  foot.append(dots, right);
+  wrap.appendChild(foot);
+
+  const cards = [...car.children];
+  const at = () => { const x = car.scrollLeft + 12; let best = 0; cards.forEach((c,i)=>{ if(Math.abs(c.offsetLeft - x) < Math.abs(cards[best].offsetLeft - x)) best = i; }); return best; };
+  const goTo = i => { const c = cards[Math.max(0, Math.min(n-1, i))]; car.scrollTo({left: c.offsetLeft - 12, behavior: 'smooth'}); };
+  const sync = () => {
+    const i = at();
+    dots.querySelectorAll('i').forEach((d,j)=>d.classList.toggle('on', j===i));
+    prev.disabled = car.scrollLeft < 4;
+    next.disabled = car.scrollLeft > car.scrollWidth - car.clientWidth - 4;
+    const r = foot.lastChild;
+    if(car.scrollLeft > 8 && !swiped.has(key)){
+      swiped.add(key); car.classList.remove('nudge');
+      r.classList.add('gone');
+      setTimeout(()=>{ const c = el('span',{class:'count'},`${at()+1} / ${n}`); r.replaceWith(c); }, 350);
+    } else if(r.classList.contains('count')) r.textContent = `${i+1} / ${n}`;
+  };
+  car.addEventListener('scroll', ()=>requestAnimationFrame(sync), {passive:true});
+  prev.addEventListener('click', ()=>goTo(at()-1));
+  next.addEventListener('click', ()=>goTo(at()+1));
+  right.addEventListener('click', ()=>goTo(at()+1));
+  prev.disabled = true;
+  wrap._goTo = goTo;
+  if(!swiped.has(key)){
+    car.classList.add('nudge');
+    car.addEventListener('animationend', ()=>car.classList.remove('nudge'), {once:true});
+  }
   return wrap;
+}
+function showFlickInPhone(i){
+  const w = view && view.querySelector('.slotWrap');
+  if(w && w._goTo) w._goTo(i);
 }
 function buildView(screen){
   const S = SCREENS[screen];
@@ -479,7 +565,7 @@ function renderPanel(){
     b.addEventListener('click',()=>jump(i));
     rail.appendChild(b);
   });
-  const s = STEPS[cur.step], f = FLICKS[SLOTS[s.slot].flick];
+  const s = STEPS[cur.step], row = SLOTS[s.slot].flicks;
   const last = cur.step===STEPS.length-1;
   const onIt = cur.screen===s.screen;
   const d = document.getElementById('detail');
@@ -490,16 +576,22 @@ function renderPanel(){
     <div class="where">${s.where}</div>
     <div class="cards"><div class="card"><div class="k">Today</div><p>${s.today}</p></div><div class="card with"><div class="k">With Flicks</div><p>${s.flicks}</p></div></div>
     <div class="pitch">${s.pitch}</div>
-    <div class="flick"><span class="pill"><span class="ic">${PLAY.replace('18','11').replace('18','11')}</span>${f.name}</span>${f.url?`<a href="${f.url}" target="_blank" rel="noopener">Open in Flicks ↗</a>`:''}</div>
+    <div class="flickRow"><div class="k">${row.length} Flicks in this slot · swipe in the phone</div>
+      <div class="flick">${row.map((fk,i)=>`<button type="button" class="pill fchip" data-i="${i}"><span class="ic">${PLAY.replace('18','11').replace('18','11')}</span>${FLICKS[fk].name}</button>`).join('')}</div></div>
     <div>
       <div class="ctrl">
         <button type="button" class="btn" id="prevB" ${cur.step===0?'disabled':''} aria-label="Previous step">←</button>
         <button type="button" class="btn pri" id="nextB">${last?'Replay tour':'Next placement'} <span aria-hidden="true">→</span></button>
       </div>
       <div class="hint"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#B5DFC6" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="#B5DFC6" stroke-width="2" stroke-linecap="round"/></svg>
-        <span>${onIt?'Tap the play button on the slot in the phone. Scrolling, going back or changing step stops the Flick, so its sound never carries over.':'Follow the glowing ring in the phone to reach this placement.'}</span></div>
+        <span>${onIt?'Tap play on a Flick in the phone, then swipe the row sideways for the next brand. Any scroll or swipe, going back or changing step stops the Flick, so its sound never carries over.':'Follow the glowing ring in the phone to reach this placement.'}</span></div>
     </div>
     ${last?`<div class="more"><div class="k">More slots in the app that can run Flicks</div><div class="chips">${MORE.map(m=>`<span class="pill">${m}</span>`).join('')}</div></div>`:''}`;
+  d.querySelectorAll('.fchip').forEach(b=>b.onclick=()=>{
+    const i = +b.dataset.i;
+    if(cur.screen!==s.screen){ jump(cur.step); setTimeout(()=>showFlickInPhone(i), 480); }
+    else showFlickInPhone(i);
+  });
   document.getElementById('prevB').onclick=()=>jump(Math.max(0,cur.step-1));
   document.getElementById('nextB').onclick=()=>{ if(last){ seen.clear(); jump(0);} else jump(cur.step+1); };
 }
