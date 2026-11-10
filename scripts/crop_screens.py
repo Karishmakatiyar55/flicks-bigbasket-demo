@@ -40,6 +40,36 @@ PIECES = {
 }
 
 
+def clean_indicators(im):
+    """Paint out the screen-recording indicators so the status bar reads as a plain phone.
+
+    - iPhone capture: the red recording dot inside the Dynamic Island -> island black.
+    - Android screenshots: the green camera/mic dot beside the battery -> bar background.
+    Only searches the top status-bar rows; the green battery icon is left alone.
+    """
+    from PIL import ImageDraw
+    import numpy as np
+    a = np.asarray(im.convert("RGB")).astype(int)
+    h, w = a.shape[:2]
+    rows = min(h, 60) if w <= 640 else min(h, int(w * 0.14))
+    r, g, b = a[:rows, :, 0], a[:rows, :, 1], a[:rows, :, 2]
+    d = ImageDraw.Draw(im)
+    targets = [((r > 170) & (g < 90) & (b < 90), None)]          # red dot -> sample left of it
+    if w <= 640:                                                  # Android screenshot
+        green = (g > 150) & (r < 120) & (b < 130)
+        green[:, : int(w * 0.85)] = False                         # only the dot right of the icons
+        targets.append((green, None))
+    for mask, _ in targets:
+        ys, xs = np.nonzero(mask)
+        if not len(xs):
+            continue
+        x0, x1, y0, y1 = xs.min() - 6, xs.max() + 6, ys.min() - 6, ys.max() + 6
+        sx = max(0, x0 - 4)
+        fill = tuple(int(v) for v in a[(y0 + y1) // 2, sx])
+        d.ellipse([x0, y0, x1, y1], fill=fill)
+    return im
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--frames", required=True)
@@ -55,6 +85,8 @@ def main():
         piece = im.crop((0, y0, w, y1)).convert("RGB")
         if w > 780:
             piece = piece.resize((780, round((y1 - y0) * 780 / w)), Image.LANCZOS)
+        if name.endswith("_top"):
+            piece = clean_indicators(piece)
         piece.save(os.path.join(OUT, f"{name}.jpg"), quality=80, optimize=True)
         meta[name] = {"sw": w, "sh": y1 - y0}
     with open(os.path.join(ROOT, "src", "meta.json"), "w") as f:
