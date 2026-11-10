@@ -170,8 +170,6 @@ body.m .screen{border-radius:0}
 .loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
 .loading span{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,236,226,.18);border-top-color:#F6D2C4;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.liveB{position:absolute;top:10px;left:10px;z-index:3;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.08em;background:rgba(18,6,5,.7);color:#F3E6C8;padding:5px 9px;border-radius:99px;animation:fadeUp .4s var(--ease) both}
-.liveB i{width:6px;height:6px;border-radius:50%;background:#B5DFC6;box-shadow:0 0 8px #B5DFC6;animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.3}}
 .stopB{position:absolute;top:8px;right:8px;z-index:3;border:0;border-radius:99px;background:rgba(18,6,5,.7);color:#fff;font-size:11px;font-weight:700;padding:0 12px;min-height:32px;cursor:pointer;animation:fadeUp .4s var(--ease) both}
 
@@ -320,11 +318,10 @@ function startFlick(slotKey, box){
   ifr.setAttribute('allow','autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write');
   ifr.addEventListener('load', ()=>{ ifr.classList.add('on'); setTimeout(()=>spin.remove(), 400); });
   ifr.srcdoc = flickDoc(f);
-  const badge = el('span',{class:'liveB'},'<i></i>LIVE FLICK');
   const stop = el('button',{type:'button',class:'stopB','aria-label':'Stop Flick'},'Stop ×');
   stop.addEventListener('click', e=>{ e.stopPropagation(); stopFlick(); });
-  box.append(spin, ifr, badge, stop);
-  live = {box, nodes:[spin, ifr, badge, stop]};
+  box.append(spin, ifr, stop);
+  live = {box, nodes:[spin, ifr, stop]};
   mountedAt = performance.now();
 }
 function stopFlick(){
