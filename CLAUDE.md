@@ -19,6 +19,6 @@ Push straight to `main` (it serves the GitHub Pages link); no branches or PRs un
 
 - Flicks auto-play: once scrolling or swiping settles (~220 ms), the Flick that is at least 60% on screen loads by itself, with no tap. Only one plays at a time.
 - No audio leaks: the playing Flick's iframe is removed the moment it drops below 50% visible (vertical scroll or sideways swipe), on navigation, step change or a hidden tab.
-- Every slot is a swipeable row of Flicks (see `SLOTS[*].flicks`), with a swipe hint, dots/counter and desktop arrows.
+- Swipeable rows of Flicks (swipe hint, dots/counter, desktop arrows) only where several sponsors genuinely share a slot: the home masthead and the search carousel. Single-brand or single-product slots (Brand of the Day store, product page, aisle takeover, Smart Basket) show one Flick. Set by the length of `SLOTS[*].flicks`.
 - Phones (< 760 px wide): the bigbasket app fills the screen, nothing else shown. Desktop: guided steps beside a framed phone.
 - Flam branding: dark maroon/copper glow with grain, bold white Inter Tight headlines, cream pill chips, the Flam logo gradient (#EEF0B4 → #B5DFC6 → #F2F0FF) for highlights.

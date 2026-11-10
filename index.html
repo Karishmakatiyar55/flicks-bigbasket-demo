@@ -154,6 +154,9 @@ body.m .screen{border-radius:0}
 .spons{margin-left:auto;font-size:10.5px;color:#6b6b6b;font-weight:600}
 /* swipeable row of Flicks */
 .carBox{position:relative}
+.single{display:flex;gap:12px;align-items:flex-start}
+.slotSide{flex:1;color:#2a2a2a;font-size:12.5px;line-height:1.5;padding-top:2px}
+.slotSide strong{display:block;font-size:15px;margin-bottom:6px;color:#111}
 .car{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -12px;padding:0 12px;scroll-padding:0 12px;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
 .car::-webkit-scrollbar{display:none}
 .slot{position:relative;flex:none;height:var(--ch,318px);width:auto;scroll-snap-align:start;border-radius:18px;overflow:hidden;background:#170A07;transform:translateZ(0)}
@@ -256,11 +259,13 @@ const swiped = new Set(); // slots the viewer has already swiped, so the hint st
 const SLOTS = {
   // flicks: the swipeable row for this slot, first one leads. ch: card height in px.
   home:{flicks:['juice','can','cereal'],ch:318,title:'Festive masthead',spons:'Sponsored',poster:'home_mast',t1:'See this masthead as a Flick',t2:'Same scene. Each sponsor’s product swaps in.'},
-  brand:{flicks:['can','juice','cereal'],ch:318,title:'Brand of the Day',spons:'Brand store',poster:'brand_hero',t1:'See this hero as a Flick',t2:'The pack swaps through the range in one video.'},
-  pdp:{flicks:['necklace','lip','eye'],ch:330,title:'Complete the gift',spons:'Sponsored',poster:null,t1:'Play the gifting Flick',t2:'Model stays, necklace swaps.'},
+  // A row only where several sponsors genuinely share the slot (masthead, search carousel).
+  // One brand or one product (brand store, product page, aisle takeover, restock) gets a single Flick.
+  brand:{flicks:['can'],ch:366,title:'Brand of the Day',spons:'Brand store',poster:'brand_hero',t1:'See this hero as a Flick',t2:'The pack swaps through the range in one video.'},
+  pdp:{flicks:['necklace'],ch:330,title:'Complete the gift',spons:'Sponsored',poster:null,t1:'Gifting Flick',t2:'Model stays, necklace swaps.',side:'<strong>Gifting for your sister?</strong>Pair this gift box with a piece from the Jewellery Collection. Swap styles on the same model in the Flick.'},
   search:{flicks:['lip','eye','necklace'],ch:318,title:'Trending in Beauty',spons:'Sponsored',poster:'se_banner',t1:'See this banner as a Flick',t2:'Same model, every shade in the range.'},
-  cat:{flicks:['eye','lip','necklace'],ch:318,title:'Beauty & Personal Care',spons:'Sponsored',poster:null,t1:'Play the category Flick',t2:'Swap the look, keep the model and scene.'},
-  sb:{flicks:['cereal','juice','can'],ch:318,title:'Restock your breakfast',spons:'Sponsored',poster:null,t1:'Play the replenishment Flick',t2:'The cereal pack swaps, the breakfast scene stays.'}
+  cat:{flicks:['eye'],ch:366,title:'Beauty & Personal Care',spons:'Aisle takeover · Sponsored',poster:null,t1:'Category Flick',t2:'Swap the look, keep the model and scene.'},
+  sb:{flicks:['cereal'],ch:366,title:'Restock your breakfast',spons:'Sponsored',poster:null,t1:'Replenishment Flick',t2:'The cereal pack swaps, the breakfast scene stays.'}
 };
 
 const NAVHOT = ()=>[
@@ -435,6 +440,14 @@ function slotNode(key){
   const wrap = el('div',{class:'slotWrap','data-slot':key});
   wrap.style.setProperty('--ch', s.ch+'px');
   wrap.appendChild(el('div',{class:'slotHead'},`<span class="fl"><img src="${FLAMLOGO}" alt="">FLICKS</span><span class="slotTitle">${s.title}</span><span class="spons">${s.spons}</span>`));
+  if(n === 1){
+    // One brand / one product: a single full-width Flick, no row, hint or arrows.
+    const single = el('div',{class:'single'});
+    single.appendChild(cardNode(key, s.flicks[0], 0));
+    if(s.side) single.appendChild(el('div',{class:'slotSide'}, s.side));
+    wrap.appendChild(single);
+    return wrap;
+  }
   const carBox = el('div',{class:'carBox'});
   const car = el('div',{class:'car','aria-label':`${s.title}: ${n} Flicks, swipe for more`});
   s.flicks.forEach((fk,i)=>car.appendChild(cardNode(key, fk, i)));
@@ -602,7 +615,7 @@ function renderPanel(){
     <div class="where">${s.where}</div>
     <div class="cards"><div class="card"><div class="k">Today</div><p>${s.today}</p></div><div class="card with"><div class="k">With Flicks</div><p>${s.flicks}</p></div></div>
     <div class="pitch">${s.pitch}</div>
-    <div class="flickRow"><div class="k">${row.length} Flicks in this slot · swipe in the phone</div>
+    <div class="flickRow"><div class="k">${row.length>1?`${row.length} Flicks in this slot · swipe in the phone`:'The Flick in this slot'}</div>
       <div class="flick">${row.map((fk,i)=>`<button type="button" class="pill fchip" data-i="${i}"><span class="ic">${PLAY.replace('18','11').replace('18','11')}</span>${FLICKS[fk].name}</button>`).join('')}</div></div>
     <div>
       <div class="ctrl">
