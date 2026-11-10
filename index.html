@@ -194,7 +194,6 @@ body.m .screen{border-radius:0}
 .loading span{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,236,226,.18);border-top-color:#F6D2C4;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes blink{50%{opacity:.3}}
-.stopB{position:absolute;top:8px;right:8px;z-index:3;border:0;border-radius:99px;background:rgba(18,6,5,.7);color:#fff;font-size:11px;font-weight:700;padding:0 12px;min-height:32px;cursor:pointer;animation:fadeUp .4s var(--ease) both}
 
 /* end-of-tour sheet inside phone */
 .done{position:absolute;left:12px;right:12px;bottom:110px;z-index:12;background:#170A07;color:#F3E6C8;border-radius:20px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:fadeUp .6s .3s var(--ease) both}
@@ -352,10 +351,8 @@ function startFlick(flickKey, box){
   ifr.setAttribute('allow','autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write');
   ifr.addEventListener('load', ()=>{ ifr.classList.add('on'); setTimeout(()=>spin.remove(), 400); });
   ifr.srcdoc = flickDoc(f);
-  const stop = el('button',{type:'button',class:'stopB','aria-label':'Stop Flick'},'Stop ×');
-  stop.addEventListener('click', e=>{ e.stopPropagation(); stopFlick(); });
-  box.append(spin, ifr, stop);
-  live = {box, nodes:[spin, ifr, stop]};
+  box.append(spin, ifr);
+  live = {box, nodes:[spin, ifr]};
   mountedAt = performance.now();
 }
 function stopFlick(){
@@ -365,11 +362,38 @@ function stopFlick(){
   const p = live.box.querySelector('.poster'); if(p) p.classList.remove('gone');
   live = null;
 }
-const GRACE = 250;
-document.addEventListener('scroll', ()=>{ if(live && performance.now()-mountedAt>GRACE) stopFlick(); }, true);
-document.addEventListener('wheel', e=>{ if(live && Math.abs(e.deltaY)+Math.abs(e.deltaX)>1) stopFlick(); }, {capture:true, passive:true});
-document.addEventListener('touchmove', ()=>{ if(live) stopFlick(); }, {capture:true, passive:true});
-document.addEventListener('visibilitychange', ()=>{ if(document.hidden) stopFlick(); });
+/* Auto-play: once scrolling or swiping settles, the Flick that is mostly on screen plays by itself.
+   A playing Flick that slides mostly out of view is removed at once, so its sound never carries over. */
+const PLAY_AT = 0.6, STOP_BELOW = 0.5, SETTLE_MS = 220;
+function visRatio(box){
+  if(!view || !box.isConnected) return 0;
+  const r = box.getBoundingClientRect();
+  if(!r.width || !r.height) return 0;
+  const sc = view._sc.getBoundingClientRect();
+  let top = sc.top, bottom = sc.bottom;
+  const tl = view.querySelector('.layer.topL'); if(tl && tl.style.display!=='none') top = Math.max(top, tl.getBoundingClientRect().bottom);
+  const fl = view.querySelector('.layer.footL'); if(fl) bottom = Math.min(bottom, fl.getBoundingClientRect().top);
+  const car = box.parentElement.getBoundingClientRect();
+  const left = Math.max(sc.left, car.left), right = Math.min(sc.right, car.right);
+  const w = Math.max(0, Math.min(r.right, right) - Math.max(r.left, left));
+  const h = Math.max(0, Math.min(r.bottom, bottom) - Math.max(r.top, top));
+  return (w*h) / (r.width*r.height);
+}
+function reconcile(){
+  if(document.hidden || !view) return;
+  let best = null, br = 0;
+  view.querySelectorAll('.slot').forEach(b=>{ const v = visRatio(b); if(v > br){ br = v; best = b; } });
+  if(!best || br < PLAY_AT){ stopFlick(); return; }
+  if(live && live.box === best) return;
+  startFlick(best.dataset.f, best);
+}
+let settleT = 0;
+function scheduleReconcile(ms){ clearTimeout(settleT); settleT = setTimeout(reconcile, ms); }
+document.addEventListener('scroll', ()=>{
+  if(live && visRatio(live.box) < STOP_BELOW) stopFlick();
+  scheduleReconcile(SETTLE_MS);
+}, true);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) stopFlick(); else scheduleReconcile(150); });
 window.addEventListener('pagehide', stopFlick);
 
 /* ---------- building screens ---------- */
@@ -394,7 +418,7 @@ const HAND = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"
 function cardNode(slotKey, flickKey, i){
   const s = SLOTS[slotKey], f = FLICKS[flickKey];
   const lead = i===0;
-  const box = el('div',{class:'slot'+(f.ar[1]>f.ar[0]?' tall':''),'data-i':i});
+  const box = el('div',{class:'slot'+(f.ar[1]>f.ar[0]?' tall':''),'data-i':i,'data-f':flickKey});
   box.style.aspectRatio = f.ar[0]+'/'+f.ar[1];
   const art = lead && s.poster ? `<img src="${IMG[s.poster]}" alt=""><span class="shade"></span><span class="chipT">Today · static ad</span>`
                                : `<span class="np${i?' v'+(i%3):''}"></span>`;
@@ -507,6 +531,8 @@ function renderScreen(dir){
     if(!reduce) view.animate([{opacity:0},{opacity:1}],{duration:300});
   }
   applyGuide();
+  // Arriving on a screen plays the Flick in view once the slide-in has finished.
+  scheduleReconcile(old && dir ? 480 : 200);
 }
 function nextIdx(){ return cur.step+1 < STEPS.length ? cur.step+1 : null; }
 function applyGuide(){
@@ -584,7 +610,7 @@ function renderPanel(){
         <button type="button" class="btn pri" id="nextB">${last?'Replay tour':'Next placement'} <span aria-hidden="true">→</span></button>
       </div>
       <div class="hint"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#B5DFC6" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="#B5DFC6" stroke-width="2" stroke-linecap="round"/></svg>
-        <span>${onIt?'Tap play on a Flick in the phone, then swipe the row sideways for the next brand. Any scroll or swipe, going back or changing step stops the Flick, so its sound never carries over.':'Follow the glowing ring in the phone to reach this placement.'}</span></div>
+        <span>${onIt?'The Flick in view plays by itself. Swipe the row sideways and the next brand’s Flick takes over. Scroll it out of view, go back or change step and it stops, so its sound never carries over.':'Follow the glowing ring in the phone to reach this placement.'}</span></div>
     </div>
     ${last?`<div class="more"><div class="k">More slots in the app that can run Flicks</div><div class="chips">${MORE.map(m=>`<span class="pill">${m}</span>`).join('')}</div></div>`:''}`;
   d.querySelectorAll('.fchip').forEach(b=>b.onclick=()=>{
@@ -609,6 +635,7 @@ function layout(){
   const modeChanged = document.body.classList.contains('m') !== mobile;
   document.body.classList.toggle('m', mobile);
   if(modeChanged && view) setTimeout(()=>renderScreen(0));
+  else if(view) scheduleReconcile(200);
   let newSH;
   if(mobile){
     const z = window.innerWidth / PW;

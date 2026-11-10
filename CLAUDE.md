@@ -17,6 +17,8 @@ Push straight to `main` (it serves the GitHub Pages link); no branches or PRs un
 
 ## Demo rules to keep
 
-- Flicks load only on tap, inside an iframe that is removed on any scroll, wheel/touch move, navigation, step change or hidden tab, so audio never leaks.
+- Flicks auto-play: once scrolling or swiping settles (~220 ms), the Flick that is at least 60% on screen loads by itself, with no tap. Only one plays at a time.
+- No audio leaks: the playing Flick's iframe is removed the moment it drops below 50% visible (vertical scroll or sideways swipe), on navigation, step change or a hidden tab.
+- Every slot is a swipeable row of Flicks (see `SLOTS[*].flicks`), with a swipe hint, dots/counter and desktop arrows.
 - Phones (< 760 px wide): the bigbasket app fills the screen, nothing else shown. Desktop: guided steps beside a framed phone.
 - Flam branding: dark maroon/copper glow with grain, bold white Inter Tight headlines, cream pill chips, the Flam logo gradient (#EEF0B4 → #B5DFC6 → #F2F0FF) for highlights.
