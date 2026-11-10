@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0B0605">
 <title>Flicks × bigbasket · Inventory Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -344,13 +344,16 @@ window.addEventListener('pagehide', stopFlick);
 /* ---------- building screens ---------- */
 function el(tag, attrs={}, html){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(html!=null) e.innerHTML=html; return e; }
 function img(k){ const i=el('img',{src:IMG[k],alt:'',width:PW,height:hOf(k),draggable:'false'}); return i; }
-function addHots(container, piece, hots){
+// Height (source px) of the recorded phone status bar at the top of each screen's header piece.
+const STATUS = {home_top:150, brand_top:150, cat_top:150, sb_top:150, pdp_top:66, se_top:66};
+const isMobile = () => window.innerWidth < 760;
+function addHots(container, piece, hots, oy=0){
   const k = kOf(piece);
   (hots||[]).forEach(h=>{
     const b = el('button',{type:'button',class:'hot','data-key':h.key,'aria-label':h.tip||h.key});
-    b.style.cssText = `left:${h.x*k}px;top:${h.y*k}px;width:${h.w*k}px;height:${h.h*k}px`;
+    b.style.cssText = `left:${h.x*k}px;top:${h.y*k - oy}px;width:${h.w*k}px;height:${h.h*k}px`;
     b.addEventListener('click', ()=>go(h.go));
-    b._h = h; b._k = k;
+    b._h = h; b._k = k; b._oy = oy;
     container.appendChild(b);
   });
 }
@@ -375,17 +378,20 @@ function buildView(screen){
   const v = el('div',{class:'view'});
   const top = typeof S.top==='string'?{img:S.top}:S.top;
   const foot = S.foot ? (typeof S.foot==='string'?{img:S.foot}:S.foot) : null;
+  // On a real phone the device already shows its own status bar, so trim the recorded one.
+  const cut = isMobile() ? Math.round((STATUS[top.img]||0) * kOf(top.img)) : 0;
+  const topH = hOf(top.img) - cut;
   const sc = el('div',{class:'scroller'});
-  sc.style.paddingTop = hOf(top.img)+'px';
+  sc.style.paddingTop = topH+'px';
   if(foot) sc.style.paddingBottom = (hOf(foot.img)-10)+'px';
   S.body.forEach(seg=>{
     if(seg.slot){ sc.appendChild(slotNode(seg.slot)); return; }
     const d = el('div',{class:'seg'}); d.appendChild(img(seg.img)); addHots(d, seg.img, seg.hot); sc.appendChild(d);
   });
   v.appendChild(sc);
-  const t = el('div',{class:'layer topL'}); t.appendChild(img(top.img)); t.style.height=hOf(top.img)+'px'; addHots(t, top.img, top.hot); v.appendChild(t);
+  const t = el('div',{class:'layer topL'}); const ti = img(top.img); ti.style.marginTop = (-cut)+'px'; t.appendChild(ti); t.style.height=topH+'px'; t.style.overflow='hidden'; if(!topH) t.style.display='none'; addHots(t, top.img, top.hot, cut); v.appendChild(t);
   if(foot){ const b = el('div',{class:'layer footL'}); b.appendChild(img(foot.img)); b.style.height=hOf(foot.img)+'px'; addHots(b, foot.img, foot.hot); v.appendChild(b); }
-  v._sc = sc; v._topH = hOf(top.img); v._footH = foot?hOf(foot.img):0;
+  v._sc = sc; v._topH = topH; v._footH = foot?hOf(foot.img):0;
   return v;
 }
 function settleScroll(v){
@@ -434,14 +440,15 @@ function applyGuide(){
   hot.parentElement.appendChild(tip);
   const w = tip.offsetWidth;
   const cx = h.x*k + h.w*k/2;
+  const y0 = h.y*k - (hot._oy||0);
   if(dir==='right'){
     tip.style.left = (h.x*k + h.w*k + 12)+'px';
-    tip.style.top = (h.y*k + h.h*k/2 - tip.offsetHeight/2)+'px';
+    tip.style.top = (y0 + h.h*k/2 - tip.offsetHeight/2)+'px';
     return;
   }
   const left = Math.max(10, Math.min(PW-10-w, cx - w/2));
   tip.style.left = left+'px';
-  tip.style.top = dir==='up' ? (h.y*k - 46)+'px' : (h.y*k + h.h*k + 12)+'px';
+  tip.style.top = dir==='up' ? (y0 - 46)+'px' : (y0 + h.h*k + 12)+'px';
   tip.style.setProperty('--ax', Math.max(12, Math.min(w-22, cx-left-5))+'px');
 }
 function showDone(v){
@@ -509,8 +516,10 @@ document.addEventListener('keydown', e=>{
 /* ---------- sizing: full-screen on phones, framed beside the guide on wider screens ---------- */
 const phoneEl = document.getElementById('phone');
 function layout(){
-  const mobile = window.innerWidth < 760;
+  const mobile = isMobile();
+  const modeChanged = document.body.classList.contains('m') !== mobile;
   document.body.classList.toggle('m', mobile);
+  if(modeChanged && view) setTimeout(()=>renderScreen(0));
   let newSH;
   if(mobile){
     const z = window.innerWidth / PW;
