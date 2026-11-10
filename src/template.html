@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0605">
+<title>Flicks × bigbasket · Inventory Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0605; --bg2:#140A08;
+  --maroon:#4A140D; --rust:#7A2A1C; --copper:#A2584A; --peach:#F2C3B2; --blush:#C9A08F;
+  --cream:#F3E6C8; --ink:#FFFFFF; --ink2:rgba(255,240,232,.72); --ink3:rgba(255,236,226,.5);
+  --mint:#B5DFC6; --lime:#EEF0B4; --lav:#F2F0FF;
+  --glass:rgba(255,236,226,.06); --glass2:rgba(255,236,226,.1); --edge:rgba(255,220,205,.14);
+  --flam:linear-gradient(90deg,#EEF0B4 0%,#B5DFC6 45%,#F2F0FF 100%);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit}
+a{color:inherit}
+
+/* ---------- Flam atmosphere ---------- */
+.atmos{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;background:var(--bg)}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.9;will-change:transform}
+.b1{width:62vw;height:120vh;left:-22vw;top:-20vh;background:radial-gradient(closest-side,#C9A08F 0%,#7A2A1C 55%,transparent 100%);transform:rotate(-18deg);animation:drift1 22s ease-in-out infinite alternate}
+.b2{width:38vw;height:90vh;left:16vw;top:-30vh;background:radial-gradient(closest-side,#8E4A3B 0%,#4A140D 60%,transparent 100%);animation:drift2 26s ease-in-out infinite alternate}
+.b3{width:50vw;height:60vh;right:-14vw;bottom:-28vh;background:radial-gradient(closest-side,#A2584A 0%,#4A140D 60%,transparent 100%);animation:drift3 30s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:rotate(-8deg) translate(4vw,3vh)}}
+@keyframes drift2{to{transform:translate(-5vw,8vh) scale(1.1)}}
+@keyframes drift3{to{transform:translate(-6vw,-6vh) scale(1.15)}}
+.grain{position:absolute;inset:-50%;opacity:.13;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain 1.2s steps(4) infinite}
+@keyframes grain{25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-1%,3%)}}
+.vign{position:absolute;inset:0;background:radial-gradient(120% 90% at 60% 50%,transparent 40%,rgba(5,2,2,.7) 100%)}
+
+/* ---------- desktop layout ---------- */
+.app{position:relative;z-index:1;height:100vh;height:100dvh;display:grid;grid-template-columns:minmax(360px,600px) auto;gap:clamp(32px,6vw,96px);align-items:center;justify-content:center;padding:28px clamp(24px,4vw,64px)}
+.panel{height:min(860px,calc(100dvh - 56px));display:flex;flex-direction:column;min-width:0}
+.lockup{display:flex;align-items:center;gap:18px;animation:fadeUp .8s var(--ease) both}
+.lockup img.flam{height:34px;width:auto;display:block}
+.lockup .div{width:1px;height:34px;background:rgba(255,230,220,.28)}
+.bbTile{width:38px;height:38px;border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden}
+.bbTile img{width:36px;height:36px;display:block}
+.lockup .lab{font-family:'Inter Tight',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em}
+.lockup .lab span{color:var(--ink3);font-weight:600}
+
+.rail{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:clamp(20px,4vh,40px);animation:fadeUp .8s .08s var(--ease) both}
+.rail button{border:0;background:transparent;padding:0 0 4px;cursor:pointer;text-align:left;min-height:44px;display:flex;flex-direction:column;gap:8px}
+.rail .bar{height:3px;border-radius:3px;background:rgba(255,230,220,.16);overflow:hidden;position:relative}
+.rail .bar::after{content:"";position:absolute;inset:0;background:var(--flam);transform:scaleX(0);transform-origin:left;transition:transform .6s var(--ease)}
+.rail button.seen .bar::after{transform:scaleX(1);opacity:.45}
+.rail button[aria-current="step"] .bar::after{transform:scaleX(1);opacity:1}
+.rail .rl{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s}
+.rail button[aria-current="step"] .rl{color:var(--cream)}
+.rail button:hover .rl{color:var(--ink2)}
+.rail button:focus-visible{outline:2px solid var(--mint);outline-offset:4px;border-radius:6px}
+
+.detail{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding-top:clamp(18px,4vh,40px)}
+.detail::-webkit-scrollbar{display:none}
+.detail>*{animation:fadeUp .7s var(--ease) both}
+.detail>*:nth-child(2){animation-delay:.05s}.detail>*:nth-child(3){animation-delay:.1s}.detail>*:nth-child(4){animation-delay:.15s}.detail>*:nth-child(5){animation-delay:.2s}.detail>*:nth-child(6){animation-delay:.25s}.detail>*:nth-child(7){animation-delay:.3s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;background:rgba(40,14,10,.55);border:1px solid var(--edge);color:var(--cream);font-size:13px;font-weight:500;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.pill .d{width:7px;height:7px;border-radius:50%}
+.pill.rep .d{background:var(--peach);box-shadow:0 0 10px var(--peach)}
+.pill.new .d{background:var(--mint);box-shadow:0 0 10px var(--mint)}
+.kick{font-family:'Inter Tight',sans-serif;font-weight:600;font-size:14px;color:var(--ink3);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+h1{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:clamp(36px,4.2vw,58px);line-height:1.02;letter-spacing:-.035em;margin:18px 0 10px;background:linear-gradient(180deg,#fff 30%,#F6D2C4 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 40px rgba(242,195,178,.18)}
+.where{color:var(--ink2);font-size:15px;line-height:1.5}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.card{background:var(--glass);border:1px solid var(--edge);border-radius:18px;padding:16px 16px 18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.card .k{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card.with .k{color:var(--mint)}
+.card p{margin:0;font-size:14px;line-height:1.55;color:var(--ink2)}
+.pitch{margin-top:22px;font-family:'Inter Tight',sans-serif;font-size:clamp(18px,1.6vw,22px);line-height:1.4;letter-spacing:-.01em;color:var(--ink2);font-weight:500}
+.pitch b{font-weight:700;background:var(--flam);-webkit-background-clip:text;background-clip:text;color:transparent}
+.flick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+.flick .pill{padding:7px 14px 7px 8px}
+.flick .ic{width:22px;height:22px;border-radius:50%;background:var(--flam);display:grid;place-items:center}
+.flick a{font-size:13px;color:var(--ink2);text-decoration:none;border-bottom:1px solid rgba(255,230,220,.3);padding-bottom:1px}
+.flick a:hover{color:#fff;border-color:#fff}
+.ctrl{display:flex;gap:10px;margin-top:26px;align-items:center}
+.btn{min-height:48px;padding:0 22px;border-radius:99px;border:1px solid var(--edge);background:var(--glass2);cursor:pointer;font-weight:600;font-size:15px;display:inline-flex;align-items:center;gap:10px;transition:transform .25s var(--ease),background .25s,box-shadow .25s}
+.btn:hover{transform:translateY(-1px);background:rgba(255,236,226,.16)}
+.btn.pri{background:#fff;color:#170A07;border-color:#fff;box-shadow:0 8px 30px rgba(242,195,178,.25)}
+.btn.pri:hover{box-shadow:0 10px 40px rgba(242,195,178,.45)}
+.btn:disabled{opacity:.35;pointer-events:none}
+.btn:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+.hint{margin-top:16px;font-size:13px;color:var(--ink3);line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.hint svg{flex:none;margin-top:2px}
+.more{margin-top:24px}
+.more .k{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px}
+.more .chips{display:flex;flex-wrap:wrap;gap:8px}
+.more .pill{font-size:12px;padding:6px 12px}
+
+/* ---------- phone ---------- */
+.stage{position:relative;display:grid;place-items:center;animation:phoneIn 1s .1s var(--ease) both}
+@keyframes phoneIn{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
+.glow{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,195,178,.32),transparent);filter:blur(30px);z-index:-1;animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.08);opacity:.8}}
+.phone{width:414px;height:868px;border-radius:58px;padding:12px;background:linear-gradient(160deg,#2a1714,#0d0605 40%,#1b0e0c);box-shadow:inset 0 0 0 1.5px rgba(255,220,205,.18),0 0 0 1px #000,0 40px 120px rgba(0,0,0,.6),0 0 80px rgba(162,88,74,.25)}
+.screen{width:390px;height:var(--sh,844px);border-radius:46px;overflow:hidden;position:relative;background:#fff;isolation:isolate}
+
+/* full-screen phone mode */
+body.m .atmos,body.m .panel,body.m .glow{display:none}
+body.m .app{display:block;padding:0;height:100dvh}
+body.m .stage{position:fixed;inset:0;display:block;animation:none}
+body.m .phone{width:auto;height:auto;padding:0;border-radius:0;background:none;box-shadow:none}
+body.m .screen{border-radius:0}
+
+/* ---------- inside the bigbasket screen ---------- */
+.view{position:absolute;inset:0;background:#fff;overflow:hidden}
+.layer{position:absolute;left:0;right:0;z-index:5}
+.layer.topL{top:0}
+.layer.footL{bottom:0}
+.layer img,.seg img{display:block;width:390px;height:auto;user-select:none;-webkit-user-select:none}
+.scroller{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.scroller::-webkit-scrollbar{display:none}
+.seg{position:relative}
+.hot{position:absolute;border:0;background:transparent;cursor:pointer;border-radius:16px;padding:0;z-index:6}
+.hot:active{background:rgba(0,0,0,.06)}
+.hot:focus-visible{outline:3px solid #170A07}
+.hot.guide{animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 2px #170A07,0 0 0 4px #B5DFC6,0 0 0 4px rgba(181,223,198,.6)}80%{box-shadow:0 0 0 2px #170A07,0 0 0 4px #B5DFC6,0 0 0 16px rgba(181,223,198,0)}100%{box-shadow:0 0 0 2px #170A07,0 0 0 4px #B5DFC6,0 0 0 16px rgba(181,223,198,0)}}
+.tip{position:absolute;z-index:9;background:#170A07;color:#F3E6C8;font-size:12.5px;font-weight:600;padding:8px 12px 8px 10px;border-radius:12px;white-space:nowrap;pointer-events:none;box-shadow:0 10px 30px rgba(23,10,7,.35);display:flex;align-items:center;gap:8px;animation:tipIn .5s .25s var(--ease) both}
+.tip i{width:7px;height:7px;border-radius:50%;background:#B5DFC6;box-shadow:0 0 8px #B5DFC6;flex:none}
+.tip::after{content:"";position:absolute;width:10px;height:10px;background:#170A07;transform:rotate(45deg);left:var(--ax,calc(50% - 5px))}
+.tip.up::after{bottom:-4px}
+.tip.down::after{top:-4px}
+.tip.up{--dy:6px}.tip.down{--dy:-6px}
+.tip.right{--dy:0px}
+.tip.right::after{left:-4px;top:calc(50% - 5px)}
+.tip small{font-weight:500;color:rgba(243,230,200,.6);font-size:11.5px}
+@keyframes tipIn{from{opacity:0;transform:translateY(var(--dy))}to{opacity:1;transform:none}}
+.tip.bob{animation:tipIn .5s .25s var(--ease) both,bob 2.2s 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(calc(var(--dy) * -.5))}}
+
+/* Flicks slot (in-app) */
+.slotWrap{padding:12px 12px 16px;background:#fff}
+.slotHead{display:flex;align-items:center;gap:8px;margin:0 2px 10px}
+.fl{display:inline-flex;align-items:center;gap:5px;background:#170A07;color:#F3E6C8;padding:4px 8px 4px 6px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:.06em}
+.fl img{height:13px;width:auto;display:block}
+.slotTitle{font-size:15.5px;font-weight:700;color:#1b1b1b;letter-spacing:-.01em}
+.spons{margin-left:auto;font-size:10.5px;color:#6b6b6b;font-weight:600}
+.slot{position:relative;border-radius:18px;overflow:hidden;background:#170A07;width:100%;transform:translateZ(0)}
+.slot.v{width:56%}
+.slotRow{display:flex;gap:12px;align-items:flex-start}
+.slotSide{flex:1;color:#2a2a2a;font-size:12.5px;line-height:1.5;padding-top:2px}
+.slotSide strong{display:block;font-size:15px;margin-bottom:6px;color:#111}
+.poster{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;cursor:pointer;background:#170A07;display:block;overflow:hidden;transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.poster.gone{opacity:0;transform:scale(1.04);pointer-events:none}
+.poster>img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.02);animation:kb 9s ease-in-out infinite alternate}
+@keyframes kb{to{transform:scale(1.08)}}
+.poster .np{position:absolute;inset:0;background:radial-gradient(90% 70% at 20% 10%,#C9A08F 0%,#7A2A1C 35%,#2a0c08 70%,#120605 100%)}
+.poster .np::after{content:"";position:absolute;inset:0;background-image:inherit;opacity:.0}
+.poster .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,6,5,.0) 35%,rgba(18,6,5,.85) 100%)}
+.chipT{position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(18,6,5,.66);color:#F3E6C8;padding:5px 9px;border-radius:99px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.pbar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border-radius:16px;background:rgba(18,6,5,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,220,205,.16);text-align:left}
+.slot.v .pbar{flex-direction:column;align-items:flex-start;gap:8px}
+.playB{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,#fff,#F6D2C4);box-shadow:0 0 0 0 rgba(242,195,178,.7);animation:pp 1.8s infinite}
+@keyframes pp{0%{box-shadow:0 0 0 0 rgba(242,195,178,.6)}70%{box-shadow:0 0 0 16px rgba(242,195,178,0)}100%{box-shadow:0 0 0 0 rgba(242,195,178,0)}}
+.pbar .t1{display:block;color:#fff;font-weight:700;font-size:13.5px;line-height:1.25}
+.pbar .t2{display:block;color:rgba(255,236,226,.7);font-size:11.5px;margin-top:2px;line-height:1.3}
+.slot iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000;opacity:0;transition:opacity .5s var(--ease)}
+.slot iframe.on{opacity:1}
+.loading{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.loading span{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,236,226,.18);border-top-color:#F6D2C4;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.liveB{position:absolute;top:10px;left:10px;z-index:3;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.08em;background:rgba(18,6,5,.7);color:#F3E6C8;padding:5px 9px;border-radius:99px;animation:fadeUp .4s var(--ease) both}
+.liveB i{width:6px;height:6px;border-radius:50%;background:#B5DFC6;box-shadow:0 0 8px #B5DFC6;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.3}}
+.stopB{position:absolute;top:8px;right:8px;z-index:3;border:0;border-radius:99px;background:rgba(18,6,5,.7);color:#fff;font-size:11px;font-weight:700;padding:0 12px;min-height:32px;cursor:pointer;animation:fadeUp .4s var(--ease) both}
+
+/* end-of-tour sheet inside phone */
+.done{position:absolute;left:12px;right:12px;bottom:110px;z-index:12;background:#170A07;color:#F3E6C8;border-radius:20px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:fadeUp .6s .3s var(--ease) both}
+.done img{height:22px}
+.done p{margin:0;font-size:13px;line-height:1.4;flex:1}
+.done button{border:0;background:#fff;color:#170A07;border-radius:99px;min-height:40px;padding:0 14px;font-weight:700;font-size:13px;cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="atmos" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="vign"></div><div class="grain"></div></div>
+
+<div class="app">
+  <section class="panel" aria-label="Guided tour">
+    <div class="lockup">
+      <img class="flam" src="%%FLAMLOGO%%" alt="Flam AI">
+      <span class="div" aria-hidden="true"></span>
+      <span class="bbTile"><img src="%%BBLOGO%%" alt="bigbasket"></span>
+      <span class="lab">Flicks <span>inventory demo</span></span>
+    </div>
+    <nav class="rail" id="rail" aria-label="Steps"></nav>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </section>
+
+  <div class="stage">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="phone" id="phone"><div class="screen" id="screen"></div></div>
+  </div>
+</div>
+
+<script>
+const IMG = %%IMAGES%%;
+const META = %%META%%;
+const FLAMLOGO = "%%FLAMLOGO%%";
+const PW = 390;
+const hOf = k => Math.round(META[k].sh * PW / META[k].sw);
+const kOf = k => PW / META[k].sw;
+let SH = 844;
+
+const FLICKS = {
+  juice:{id:'tyon6l',ar:[1080,1080],name:'Juice Flavor Swap',url:'https://flicks.flamapp.ai/flicks/6af308bcb10716f58b9b6ec4'},
+  can:{id:'n0489i',ar:[1080,1080],name:'Beverage Can Swap',url:'https://flicks.flamapp.ai/flicks/6af307fcb10716f58b9b6eb7'},
+  lip:{id:'onflg2',ar:[1080,1080],name:'Lip Shade Swap',url:null},
+  cereal:{id:'wkkw32',ar:[1080,1080],name:'General Mills Cereal Swap',url:'https://flicks.flamapp.ai/flicks/6af309e6a27f1f11182f51fc'},
+  necklace:{id:'ikutv6',ar:[1080,1920],name:'Necklace Swap',url:'https://flicks.flamapp.ai/flicks/6ad32ac3ed871ac8bb26e6d2'},
+  eye:{id:'it6hi9',ar:[1080,1080],name:'Eyeshadow Makeup Swap',url:'https://flicks.flamapp.ai/flicks/6ad327ebed871ac8bb26e6c4'}
+};
+
+const SLOTS = {
+  home:{flick:'juice',title:'Festive masthead',spons:'Sponsored',poster:'home_mast',t1:'See this masthead as a Flick',t2:'Same scene. Each sponsor’s product swaps in.'},
+  brand:{flick:'can',title:'Brand of the Day',spons:'Brand store',poster:'brand_hero',t1:'See this hero as a Flick',t2:'The pack swaps through the range in one video.'},
+  pdp:{flick:'necklace',title:'Complete the gift',spons:'Sponsored',poster:null,vertical:true,t1:'Play Flick',t2:'Model stays, necklace swaps.',side:'<strong>Gifting for your sister?</strong>Pair this gift box with a piece from the Jewellery Collection. Tap the Flick and swap styles on the same model.'},
+  search:{flick:'lip',title:'Trending in Beauty',spons:'Sponsored',poster:'se_banner',t1:'See this banner as a Flick',t2:'Same model, every shade in the range.'},
+  cat:{flick:'eye',title:'Beauty & Personal Care',spons:'Sponsored',poster:null,t1:'Play the category Flick',t2:'Swap the look, keep the model and scene.'},
+  sb:{flick:'cereal',title:'Restock your breakfast',spons:'Sponsored',poster:null,t1:'Play the replenishment Flick',t2:'The cereal pack swaps, the breakfast scene stays.'}
+};
+
+const NAVHOT = ()=>[
+  {x:60,y:20,w:300,h:150,go:'home',key:'nav-home',tip:'Tap Home'},
+  {x:380,y:20,w:250,h:150,go:'cat',key:'nav-cat',tip:'Tap Categories'},
+  {x:650,y:20,w:290,h:150,go:'sb',key:'nav-sb',tip:'Tap Order again'},
+];
+const SCREENS = {
+  home:{top:'home_top',foot:{img:'home_foot',hot:[...NAVHOT(),{x:985,y:0,w:190,h:180,go:'brand',key:'bod',tip:'Tap Brand of the Day',dir:'up'}]},
+    body:[{img:'home_a',hot:[{x:30,y:212,w:870,h:132,go:'search',key:'searchbar',tip:'Tap the search bar',dir:'down'}]},
+          {slot:'home'},
+          {img:'home_b',hot:[{x:40,y:200,w:340,h:370,go:'pdp',key:'truffle',tip:'Open this gift box',dir:'up'}]},
+          {img:'home_c'}]},
+  brand:{top:{img:'brand_top',hot:[{x:30,y:175,w:150,h:150,go:'home',key:'back',tip:'Go back',dir:'right'}]},
+    body:[{slot:'brand'},{img:'brand_a'},{img:'brand_b'},{img:'brand_c'}]},
+  pdp:{top:{img:'pdp_top',hot:[{x:15,y:75,w:85,h:85,go:'home',key:'back',tip:'Go back',dir:'right'}]},foot:{img:'pdp_foot'},
+    body:[{img:'pdp_a'},{slot:'pdp'},{img:'pdp_b'}]},
+  search:{top:{img:'se_top',hot:[{x:20,y:85,w:90,h:80,go:'home',key:'back',tip:'Go back',dir:'right'}]},
+    body:[{img:'se_a'},{slot:'search'},{img:'se_b'}]},
+  cat:{top:'cat_top',foot:{img:'cat_foot',hot:NAVHOT()},
+    body:[{img:'cat_a'},{img:'cat_b'},{slot:'cat'},{img:'cat_c'}]},
+  sb:{top:'sb_top',foot:{img:'sb_foot',hot:NAVHOT()},
+    body:[{slot:'sb'},{img:'sb_a'}]}
+};
+
+const STEPS = [
+  {screen:'home',slot:'home',type:'rep',short:'Masthead',title:'Home festive masthead',
+   where:'Home › the “Happy Bhai-Dooj, powered by…” masthead at the top of the feed.',
+   today:'A static co-branded masthead. Several sponsors share one image, and each gets a logo.',
+   flicks:'One Flick in the same slot. The festive scene stays and each sponsor’s product swaps in, so every co-sponsor gets the hero shot.',
+   pitch:'<b>Same premium slot, more sellable units.</b> One shoot can carry several brands in rotation, and the slot moves from a static rate card to video.'},
+  {screen:'brand',slot:'brand',type:'rep',short:'Brand of the Day',title:'Brand of the Day store',
+   where:'Floating “Brand of the Day” bubble › brand store hero (BRU × Red Label).',
+   today:'The bubble opens a brand store with a static hero banner above the product rails.',
+   flicks:'The hero becomes a Flick. The scene holds while the pack or can swaps through the range, and the rails below stay shoppable.',
+   pitch:'<b>A top-tier sponsorship package.</b> The brand that buys “Brand of the Day” shows its whole range in one hero, not one SKU.'},
+  {screen:'pdp',slot:'pdp',type:'new',short:'Product page',title:'Product page “Complete the gift”',
+   where:'Product page › under Similar Products (Truffle Treats gift box).',
+   today:'Organic Similar Products and brand links. There is no video ad unit on the page.',
+   flicks:'A vertical Flick under Similar Products. The model stays and the jewellery swaps, a gifting cross-sell at the moment of intent.',
+   pitch:'<b>New inventory on the highest-intent page.</b> Cross-category brands like jewellery and beauty reach gift buyers right before Add to Basket.'},
+  {screen:'search',slot:'search',type:'rep',short:'Search',title:'Search landing banner',
+   where:'Search › the carousel under “Season specials”.',
+   today:'A static carousel banner (“Comfort in every corner”) on the search landing.',
+   flicks:'The same carousel slot plays a Flick. The model stays while shades swap, and the variant can follow what the shopper typed.',
+   pitch:'<b>Search-intent video.</b> One creative with many variants, so the Flick can lead with the product that matches the query.'},
+  {screen:'cat',slot:'cat',type:'new',short:'Categories',title:'Category takeover',
+   where:'Categories › above the Beauty & Personal Care grid.',
+   today:'The category grid has tiles only, with no paid placement.',
+   flicks:'A category-level Flick above the Beauty grid. Model and scene stay while the look swaps.',
+   pitch:'<b>A new aisle-level unit.</b> Sell it per category (Beauty, Snacks, Beverages) to the brands that own that aisle.'},
+  {screen:'sb',slot:'sb',type:'new',short:'Smart Basket',title:'Smart Basket replenishment',
+   where:'Order again › Smart Basket, above the reorder grid.',
+   today:'A reorder grid (Dairy & Cheese, Cereals & Breakfast…) with no brand video.',
+   flicks:'A replenishment Flick. The breakfast scene stays while the cereal pack swaps, aimed at repeat buyers of the category.',
+   pitch:'<b>Retention inventory.</b> Brands can win the reorder moment, including switching shoppers from a competitor’s pack.'}
+];
+const MORE = ['Electronics hero carousel','“Maha sale on electronics” banner','“A little extra with every buy!” banner','Celebrations “Get Festival ready”','Brand store mid banners','“Auspicious festive picks” carousel'];
+
+const ROUTE = {
+  home:{brand:'bod',pdp:'truffle',search:'searchbar',cat:'nav-cat',sb:'nav-sb'},
+  brand:{'*':'back'}, pdp:{'*':'back'}, search:{'*':'back'},
+  cat:{home:'nav-home',brand:'nav-home',pdp:'nav-home',search:'nav-home',sb:'nav-sb'},
+  sb:{home:'nav-home',brand:'nav-home',pdp:'nav-home',search:'nav-home',cat:'nav-cat'}
+};
+
+let cur = {screen:'home', step:0};
+const seen = new Set([0]);
+const screenEl = document.getElementById('screen');
+let view = null;
+
+/* ---------- Flick lifecycle: one live player at a time, removed on any scroll / navigation ---------- */
+let live = null, mountedAt = 0;
+function flickDoc(f){
+  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+    '<style>html,body{margin:0;padding:0;background:#000;overflow:hidden;height:100%}flam-embed{display:block}</style></head><body>'+
+    '<script src="https://flicks.flamapp.live/'+f.id+'/embed.js" async><\/script>'+
+    '<flam-embed id="'+f.id+'" style="aspect-ratio:'+f.ar[0]+'/'+f.ar[1]+';width:100%"></flam-embed></body></html>';
+}
+function startFlick(slotKey, box){
+  stopFlick();
+  const f = FLICKS[SLOTS[slotKey].flick];
+  const poster = box.querySelector('.poster');
+  poster.classList.add('gone');
+  const spin = el('div',{class:'loading'},'<span></span>');
+  const ifr = document.createElement('iframe');
+  ifr.title = f.name + ' (Flick)';
+  ifr.setAttribute('allow','autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write');
+  ifr.addEventListener('load', ()=>{ ifr.classList.add('on'); setTimeout(()=>spin.remove(), 400); });
+  ifr.srcdoc = flickDoc(f);
+  const badge = el('span',{class:'liveB'},'<i></i>LIVE FLICK');
+  const stop = el('button',{type:'button',class:'stopB','aria-label':'Stop Flick'},'Stop ×');
+  stop.addEventListener('click', e=>{ e.stopPropagation(); stopFlick(); });
+  box.append(spin, ifr, badge, stop);
+  live = {box, nodes:[spin, ifr, badge, stop]};
+  mountedAt = performance.now();
+}
+function stopFlick(){
+  if(!live) return;
+  // Removing the iframe destroys the player and every nested frame, so no audio can continue.
+  live.nodes.forEach(n=>n.remove());
+  const p = live.box.querySelector('.poster'); if(p) p.classList.remove('gone');
+  live = null;
+}
+const GRACE = 250;
+document.addEventListener('scroll', ()=>{ if(live && performance.now()-mountedAt>GRACE) stopFlick(); }, true);
+document.addEventListener('wheel', e=>{ if(live && Math.abs(e.deltaY)+Math.abs(e.deltaX)>1) stopFlick(); }, {capture:true, passive:true});
+document.addEventListener('touchmove', ()=>{ if(live) stopFlick(); }, {capture:true, passive:true});
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) stopFlick(); });
+window.addEventListener('pagehide', stopFlick);
+
+/* ---------- building screens ---------- */
+function el(tag, attrs={}, html){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(html!=null) e.innerHTML=html; return e; }
+function img(k){ const i=el('img',{src:IMG[k],alt:'',width:PW,height:hOf(k),draggable:'false'}); return i; }
+function addHots(container, piece, hots){
+  const k = kOf(piece);
+  (hots||[]).forEach(h=>{
+    const b = el('button',{type:'button',class:'hot','data-key':h.key,'aria-label':h.tip||h.key});
+    b.style.cssText = `left:${h.x*k}px;top:${h.y*k}px;width:${h.w*k}px;height:${h.h*k}px`;
+    b.addEventListener('click', ()=>go(h.go));
+    b._h = h; b._k = k;
+    container.appendChild(b);
+  });
+}
+const PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="#170A07"/></svg>';
+function slotNode(key){
+  const s = SLOTS[key], f = FLICKS[s.flick];
+  const wrap = el('div',{class:'slotWrap'});
+  wrap.appendChild(el('div',{class:'slotHead'},`<span class="fl"><img src="${FLAMLOGO}" alt="">FLICKS</span><span class="slotTitle">${s.title}</span><span class="spons">${s.spons}</span>`));
+  const box = el('div',{class:'slot'+(s.vertical?' v':'')});
+  box.style.aspectRatio = f.ar[0]+'/'+f.ar[1];
+  const poster = el('button',{type:'button',class:'poster','aria-label':`Play ${f.name}`});
+  poster.innerHTML = (s.poster?`<img src="${IMG[s.poster]}" alt=""><span class="shade"></span><span class="chipT">Today · static ad</span>`:'<span class="np"></span>') +
+    `<span class="pbar"><span class="playB">${PLAY}</span><span><span class="t1">${s.t1}</span><span class="t2">${f.name} · ${s.t2}</span></span></span>`;
+  poster.addEventListener('click', ()=>startFlick(key, box));
+  box.appendChild(poster);
+  if(s.vertical){ const row = el('div',{class:'slotRow'}); row.append(box, el('div',{class:'slotSide'},s.side)); wrap.appendChild(row); }
+  else wrap.appendChild(box);
+  return wrap;
+}
+function buildView(screen){
+  const S = SCREENS[screen];
+  const v = el('div',{class:'view'});
+  const top = typeof S.top==='string'?{img:S.top}:S.top;
+  const foot = S.foot ? (typeof S.foot==='string'?{img:S.foot}:S.foot) : null;
+  const sc = el('div',{class:'scroller'});
+  sc.style.paddingTop = hOf(top.img)+'px';
+  if(foot) sc.style.paddingBottom = (hOf(foot.img)-10)+'px';
+  S.body.forEach(seg=>{
+    if(seg.slot){ sc.appendChild(slotNode(seg.slot)); return; }
+    const d = el('div',{class:'seg'}); d.appendChild(img(seg.img)); addHots(d, seg.img, seg.hot); sc.appendChild(d);
+  });
+  v.appendChild(sc);
+  const t = el('div',{class:'layer topL'}); t.appendChild(img(top.img)); t.style.height=hOf(top.img)+'px'; addHots(t, top.img, top.hot); v.appendChild(t);
+  if(foot){ const b = el('div',{class:'layer footL'}); b.appendChild(img(foot.img)); b.style.height=hOf(foot.img)+'px'; addHots(b, foot.img, foot.hot); v.appendChild(b); }
+  v._sc = sc; v._topH = hOf(top.img); v._footH = foot?hOf(foot.img):0;
+  return v;
+}
+function settleScroll(v){
+  const st = STEPS[cur.step];
+  if(!st || st.screen!==cur.screen) return;
+  const target = v._sc.querySelector('.slotWrap');
+  if(!target) return;
+  if(target.offsetTop + target.offsetHeight > SH - v._footH) v._sc.scrollTop = Math.max(0, target.offsetTop - v._topH - 8);
+}
+function renderScreen(dir){
+  stopFlick();
+  const old = view;
+  view = buildView(cur.screen);
+  screenEl.appendChild(view);
+  settleScroll(view);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(old && dir && !reduce){
+    const ease = 'cubic-bezier(.2,.8,.2,1)';
+    if(dir>0){
+      view.style.zIndex = 2;
+      view.animate([{transform:'translateX(100%)'},{transform:'none'}],{duration:420,easing:ease});
+      old.animate([{transform:'none',filter:'brightness(1)'},{transform:'translateX(-28%)',filter:'brightness(.7)'}],{duration:420,easing:ease}).onfinish=()=>old.remove();
+    } else {
+      old.style.zIndex = 2; view.style.zIndex = 1;
+      view.animate([{transform:'translateX(-28%)',filter:'brightness(.7)'},{transform:'none',filter:'brightness(1)'}],{duration:420,easing:ease});
+      old.animate([{transform:'none'},{transform:'translateX(100%)'}],{duration:420,easing:ease}).onfinish=()=>old.remove();
+    }
+  } else if(old){
+    old.remove();
+    if(!reduce) view.animate([{opacity:0},{opacity:1}],{duration:300});
+  }
+  applyGuide();
+}
+function nextIdx(){ return cur.step+1 < STEPS.length ? cur.step+1 : null; }
+function applyGuide(){
+  const v = view;
+  const n = nextIdx();
+  if(n==null){ showDone(v); return; }
+  const r = ROUTE[cur.screen]; if(!r) return;
+  const key = r[STEPS[n].screen] || r['*']; if(!key) return;
+  const hot = v.querySelector(`.hot[data-key="${key}"]`); if(!hot) return;
+  hot.classList.add('guide');
+  const h = hot._h, k = hot._k, dir = h.dir || 'up';
+  const nxt = h.tip.includes(STEPS[n].short) ? '' : `<small>Next: ${STEPS[n].short}</small>`;
+  const tip = el('div',{class:'tip bob '+dir},`<i></i>${h.tip}${nxt}`);
+  hot.parentElement.appendChild(tip);
+  const w = tip.offsetWidth;
+  const cx = h.x*k + h.w*k/2;
+  if(dir==='right'){
+    tip.style.left = (h.x*k + h.w*k + 12)+'px';
+    tip.style.top = (h.y*k + h.h*k/2 - tip.offsetHeight/2)+'px';
+    return;
+  }
+  const left = Math.max(10, Math.min(PW-10-w, cx - w/2));
+  tip.style.left = left+'px';
+  tip.style.top = dir==='up' ? (h.y*k - 46)+'px' : (h.y*k + h.h*k + 12)+'px';
+  tip.style.setProperty('--ax', Math.max(12, Math.min(w-22, cx-left-5))+'px');
+}
+function showDone(v){
+  const d = el('div',{class:'done'},`<img src="${FLAMLOGO}" alt="Flam"><p>That’s all six Flicks placements on bigbasket.</p><button type="button">Replay tour</button>`);
+  d.querySelector('button').addEventListener('click', ()=>{ seen.clear(); jump(0); });
+  v.appendChild(d);
+}
+function go(screen){
+  if(screen===cur.screen) return;
+  const dir = screen==='home' || (cur.screen==='sb' && screen==='cat') ? -1 : 1;
+  cur.screen = screen;
+  const n = nextIdx();
+  if(n!=null && STEPS[n].screen===screen) cur.step = n;
+  else if(screen!=='home'){ const i = STEPS.findIndex(s=>s.screen===screen); if(i>=0) cur.step = i; }
+  seen.add(cur.step);
+  renderScreen(dir); renderPanel();
+}
+function jump(i){
+  const dir = i>=cur.step ? 1 : -1;
+  const same = STEPS[i].screen===cur.screen;
+  cur.step=i; cur.screen=STEPS[i].screen; seen.add(i);
+  renderScreen(same?0:dir); renderPanel();
+}
+
+/* ---------- guided panel ---------- */
+function renderPanel(){
+  const rail = document.getElementById('rail'); rail.innerHTML='';
+  STEPS.forEach((s,i)=>{
+    const b = el('button',{type:'button',class:seen.has(i)?'seen':''},`<span class="bar"></span><span class="rl">${String(i+1).padStart(2,'0')} ${s.short}</span>`);
+    if(i===cur.step) b.setAttribute('aria-current','step');
+    b.addEventListener('click',()=>jump(i));
+    rail.appendChild(b);
+  });
+  const s = STEPS[cur.step], f = FLICKS[SLOTS[s.slot].flick];
+  const last = cur.step===STEPS.length-1;
+  const onIt = cur.screen===s.screen;
+  const d = document.getElementById('detail');
+  d.innerHTML = `
+    <div class="meta"><span class="kick">${String(cur.step+1).padStart(2,'0')} / ${String(STEPS.length).padStart(2,'0')}</span>
+      <span class="pill ${s.type}"><span class="d"></span>${s.type==='rep'?'Existing ad slot → Flick':'New Flicks inventory'}</span></div>
+    <h1>${s.title}</h1>
+    <div class="where">${s.where}</div>
+    <div class="cards"><div class="card"><div class="k">Today</div><p>${s.today}</p></div><div class="card with"><div class="k">With Flicks</div><p>${s.flicks}</p></div></div>
+    <div class="pitch">${s.pitch}</div>
+    <div class="flick"><span class="pill"><span class="ic">${PLAY.replace('18','11').replace('18','11')}</span>${f.name}</span>${f.url?`<a href="${f.url}" target="_blank" rel="noopener">Open in Flicks ↗</a>`:''}</div>
+    <div>
+      <div class="ctrl">
+        <button type="button" class="btn" id="prevB" ${cur.step===0?'disabled':''} aria-label="Previous step">←</button>
+        <button type="button" class="btn pri" id="nextB">${last?'Replay tour':'Next placement'} <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="hint"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#B5DFC6" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="#B5DFC6" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>${onIt?'Tap the play button on the slot in the phone. Scrolling, going back or changing step stops the Flick, so its sound never carries over.':'Follow the glowing ring in the phone to reach this placement.'}</span></div>
+    </div>
+    ${last?`<div class="more"><div class="k">More slots in the app that can run Flicks</div><div class="chips">${MORE.map(m=>`<span class="pill">${m}</span>`).join('')}</div></div>`:''}`;
+  document.getElementById('prevB').onclick=()=>jump(Math.max(0,cur.step-1));
+  document.getElementById('nextB').onclick=()=>{ if(last){ seen.clear(); jump(0);} else jump(cur.step+1); };
+}
+document.addEventListener('keydown', e=>{
+  if(document.body.classList.contains('m')) return;
+  if(e.target.closest && e.target.closest('input,textarea')) return;
+  if(e.key==='ArrowRight' && cur.step<STEPS.length-1) jump(cur.step+1);
+  if(e.key==='ArrowLeft' && cur.step>0) jump(cur.step-1);
+});
+
+/* ---------- sizing: full-screen on phones, framed beside the guide on wider screens ---------- */
+const phoneEl = document.getElementById('phone');
+function layout(){
+  const mobile = window.innerWidth < 760;
+  document.body.classList.toggle('m', mobile);
+  let newSH;
+  if(mobile){
+    const z = window.innerWidth / PW;
+    phoneEl.style.zoom = z;
+    newSH = Math.round(window.innerHeight / z);
+  } else {
+    newSH = 844;
+    phoneEl.style.zoom = Math.min(1, Math.max(.55, (window.innerHeight - 48) / 868));
+  }
+  if(newSH !== SH){ SH = newSH; screenEl.style.setProperty('--sh', SH+'px'); if(view) settleScroll(view); }
+}
+let rT; window.addEventListener('resize', ()=>{ clearTimeout(rT); rT=setTimeout(layout,60); });
+layout();
+renderScreen(0); renderPanel();
+</script>
+</body>
+</html>
