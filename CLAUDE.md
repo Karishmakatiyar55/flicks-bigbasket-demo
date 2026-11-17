@@ -19,7 +19,10 @@ Push straight to `main` (it serves the GitHub Pages link); no branches or PRs un
 
 - It is a working replica of the bigbasket app with Flicks placed in it, not a guided tour. No explanatory text on the page (no "concept demo" notes, no Flicks badges, no step panel); notes live in the README only.
 - Flicks come from the saved `flicks-ad-tags` codes, unchanged, and each one must match the category of the slot it sits in.
-- No audio leaks: an ad-tag Flick is silenced unless at least half of it is on screen; a web-embed Flick's frame is removed as soon as less than half of it is on screen; leaving a screen removes every Flick on it.
+- No audio leaks: a Flick is silenced unless at least half of it is on screen; leaving a screen removes every Flick on it.
+- Flicks saved as web embeds run as their ad tag (`https://flicks.flamapp.live/<id>/ad.js`), so the app can hide their button, follow their options and add them to the basket. Every Flick has an Add to basket.
+- Swipeable banner rows start with two Flicks side by side, then a static banner, then more Flicks.
+- Every category tile and home tab opens an aisle page; an aisle carries a Flick only where a saved one fits it.
 - Swipeable banner rows open on a Flick and carry several Flicks between the app's own banners.
 - No button inside a Flick where the app shows its own; never hide the option switcher (do not blanket-hide `[data-vertex-trigger]`).
 - Prices in rupees that fit each item.

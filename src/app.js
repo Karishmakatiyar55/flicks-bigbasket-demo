@@ -47,7 +47,7 @@ function tagDoc(slotId, b){
   // The bridge runs before the Flick. It reports render status, option switches and click-throughs
   // to this page, and gives the page a mute switch so sound can never keep playing off screen.
   const bridge = `(function(){var av=function(s){return /av01|av1/i.test(String(s||''))};try{if(window.VideoDecoder&&VideoDecoder.isConfigSupported){var o=VideoDecoder.isConfigSupported.bind(VideoDecoder);VideoDecoder.isConfigSupported=function(q){return q&&av(q.codec)?Promise.resolve({supported:false,config:q}):o(q)}}}catch(e){}try{var mc=navigator.mediaCapabilities;if(mc&&mc.decodingInfo){var od=mc.decodingInfo.bind(mc);mc.decodingInfo=function(q){return q&&q.video&&av(q.video.contentType)?Promise.resolve({supported:false,smooth:false,powerEfficient:false}):od(q)}}}catch(e){}})();
-(function(){var S=${JSON.stringify(slotId)},EMB=${b.embed?1:0},RD=0;function t(m){m.flam=1;m.slot=S;try{parent.postMessage(m,"*")}catch(e){}}
+(function(){var S=${JSON.stringify(slotId)},RD=0;function t(m){m.flam=1;m.slot=S;try{parent.postMessage(m,"*")}catch(e){}}
 function deep(root,sel,out){try{var a=root.querySelectorAll(sel);for(var i=0;i<a.length;i++)out.push(a[i]);var all=root.querySelectorAll("*");for(var j=0;j<all.length;j++)if(all[j].shadowRoot)deep(all[j].shadowRoot,sel,out)}catch(e){}return out}
 /* ---- sound guard: starts silenced; the host page un-silences only the Flick that is on screen ---- */
 var M=true,E=[],G=[];
@@ -81,22 +81,11 @@ var st=document.createElement("style");st.setAttribute("data-nocta","");
 st.textContent="[data-vertex-trigger]:not(.vx-swatch):not(.vx-picker):not([data-vertex-diff]):not(.vx-picker *):not(:has(.vx-swatch,.vx-picker,[data-vertex-diff])){visibility:hidden!important;opacity:0!important;pointer-events:none!important}";
 r.appendChild(st)}catch(e){}}}
 var until=Date.now()+6e4;(function again(){var ps=deep(document,"vertex-player",[]);for(var i=0;i<ps.length;i++)hook(ps[i]);nocta(ps);
-if(EMB&&!RD){var fe=document.querySelector("flam-embed");if(fe&&((fe.shadowRoot&&fe.shadowRoot.childElementCount)||fe.childElementCount))setTimeout(ready,1500)}
 if(!RD){for(var k=0;k<ps.length;k++){try{var vd=ps[k].shadowRoot&&ps[k].shadowRoot.querySelector("video");if(vd&&vd.readyState>=2){ready();break}}catch(e){}}}
 if(Date.now()<until)setTimeout(again,250)})();
 try{new MutationObserver(function(){var v=document.querySelector("vertex-player");if(v)hook(v)}).observe(document.documentElement,{childList:true,subtree:true})}catch(e){}
-if(EMB)window.addEventListener("load",function(){setTimeout(ready,4000)});
 window.addEventListener("error",function(e){var s=e.target;if(s&&s.tagName==="SCRIPT")t({type:"error",msg:"The Flick could not be loaded"})},true);
 t({type:"boot"});})();`;
-  if(b.embed){ const id = /^[a-z0-9]+$/.test(b.embed) ? b.embed : "";
-    // Flam's web embed code, as saved, inside its own frame.
-    return `<!doctype html>
-<meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<style>html,body{margin:0;height:100%;background:${b.dark?"#000":"#fff"};overflow:hidden}flam-embed{display:block}</style>
-<script>${bridge}<\/script>
-<script src="https://flicks.flamapp.live/${id}/embed.js" async><\/script>
-<flam-embed id="${id}" style="aspect-ratio:${b.ar[0]}/${b.ar[1]};width:100%"></flam-embed>`; }
   const cfg = !b.dsp ? "" : `<script>window.AD_CONFIG=window.AD_CONFIG||{};window.AD_CONFIG.dsp="dv360_studio";window.AD_CONFIG.publisherInfo={"publisher_id":"\${PUBLISHER_ID}","adsxt_publisher_id":"\${ADSXT_PUBLISHER_ID}","universal_site_id":"\${UNIVERSAL_SITE_ID}","source_url":"\${SOURCE_URL}","source_url_enc":"\${SOURCE_URL_ENC}","adsxt_ad_system_domain":"\${ADSXT_AD_SYSTEM_DOMAIN}"};window.AD_CONFIG.clickTracker={"mode":"exit","template":""};<\/script>`;
   const src = /^[\w-]+:\/\/[^"'<>\s]+$/.test(b.src) ? b.src : "";
   return `<!doctype html>
@@ -186,8 +175,9 @@ window.addEventListener("message", e=>{
 });
 
 /* ---- mount and sound control ----
-   An ad-tag Flick is kept running only near the screen (four at most) and is audible only while at least half of it is on screen.
-   A web-embed Flick cannot be silenced from outside, so it runs only while at least half of it is on screen and is removed the moment it is not. */
+   Flicks are started well before they scroll into view so they are already playing when they arrive, and only the nearest few are kept running.
+   A Flick can be heard only while at least half of it is on screen, in front, with the tab visible. */
+const MAXLIVE = matchMedia("(pointer: coarse)").matches ? 4 : 6;
 const CLIP = /(^|\s)(scr|row|hero|vm)(\s|$)/;
 function vis(h){
   const r = h.getBoundingClientRect(), a = r.width*r.height; if(!a) return {ratio:0, dist:1e9};
@@ -204,10 +194,9 @@ function audit(){
   const ov = OVER.classList.contains("on"); let best=null, bestR=0; const list=[], cand=[];
   $$(".flick[data-slot]", APP).forEach(h=>{ const s = SLOTS[h.dataset.slot]; if(!s) return; const {ratio,dist} = vis(h); const over = !!h.closest("#over");
     const ok = ratio >= .5 && !document.hidden && (!ov || over);
-    if(BRANDS[s.brand].embed){ if(ok) mount(h); else unmount(h); }
-    else cand.push([dist - ratio*1000 - (over?5000:0), h, dist, ratio]);
+    cand.push([dist - ratio*1000 - (over?5000:0), h, dist, ratio]);
     list.push([h,s]); if(ok && ratio + (over?1:0) > bestR){ bestR = ratio + (over?1:0); best = s; } });
-  cand.sort((a,b)=>a[0]-b[0]).forEach(([_,h,dist,ratio],i)=>{ if(dist < 420 && (i < 4 || ratio > 0)) mount(h); else if(dist > 760 || (i >= 4 && ratio === 0)) unmount(h); });
+  cand.sort((a,b)=>a[0]-b[0]).forEach(([_,h,dist,ratio],i)=>{ if(dist < 900 && (i < MAXLIVE || ratio > 0)) mount(h); else if(dist > 1500 || (i >= MAXLIVE && ratio === 0)) unmount(h); });
   list.forEach(([h,s])=>{ if(!s.mounted) return; const mute = s !== best; if(s.muted === mute) return; s.muted = mute; try{ frameWin(h).postMessage({flamCmd:"mute", on:mute}, "*"); }catch(e){} });
 }
 let auditT=0; const sched = () => { if(auditT) return; auditT = setTimeout(()=>{ auditT=0; audit(); }, 90); };
@@ -248,10 +237,6 @@ function adCard(id, k, anchor, o={}){ const b = BRANDS[k], v = b.variants[0];
   <div class="adb" data-spop="${id}"><div><div class="br">${av(k)}${esc(b.name)}<span class="sp">Sponsored</span></div><h4 style="margin-top:6px">${esc(o.head||b.head)}</h4></div>
   <div class="vline"><span><b data-sv="${id}">${b.named?esc(vshort(k,0)):"1 of 3"}</b> · <b data-sp="${id}">${priceHTML(v.p,v.was)}</b></span>${dots(id)}</div>
   <button class="cta" onclick="ctaGo('${id}')">Add to basket</button></div></div>`; }
-// Banner card for a web-embed Flick: the video with the app's headline and, where it leads somewhere, a button.
-function showCard(id, k, anchor, o={}){ const b = BRANDS[k];
-  return `<div class="adcard ${o.cls||""}" data-anchor="${anchor}" style="${o.style||""}"><span class="adtag">Ad</span>${flick(id,k,{cta:"cat"})}
-  <div class="adb"><div><div class="br"><span class="sp">Sponsored</span></div><h4 style="margin-top:4px">${esc(o.head||b.head)}</h4></div>${o.label?`<button class="cta ghost" onclick="ctaGo('${id}')">${o.label} ${I.right}</button>`:""}</div></div>`; }
 const stat = (k, fn) => `<button class="stat" style="background-image:url(${IMG[k][2]})" onclick="${fn}">${pic(k)}</button>`;
 const hero = (id, cards) => `<div class="hero" data-hero="${id}">${cards.join("")}</div><div class="hdots" data-hd="${id}">${cards.map((_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`;
 const mini = (id,k,i) => { const v = BRANDS[k].variants[i]; return `<div class="mini ${i?"":"on"}" data-sync="${id}" data-i="${i}" onclick="pickOrOpen('${id}',${i})" role="button" tabindex="0"><span class="nm"><i class="sw" style="background:${v.c}"></i><span>${esc(vshort(k,i))}</span></span><b class="price">${priceHTML(v.p)}</b>${addc(`${k}-${i}`)}</div>`; };
@@ -273,31 +258,27 @@ function homeScreen(){
   const T = (x,y,fn,l) => [x,y,80,80,fn,l];
   return `<div class="screen">${stpad("#830f56")}<div class="scr" id="scr">
   ${seg("home_a",0,0,[[345,20,34,34,"out('Your account')","Account"],[12,68,280,47,"go('#/search/')","Search"],[300,68,78,47,"out('Shopping lists')","Lists"],
-    [72,123,71,54,"out('The Fresh tab')","Fresh"],[145,123,71,54,"out('The Celebrations tab')","Celebrations"],[217,123,71,54,"go('#/cat/electronics')","Electronics"],[289,123,71,54,"out('The Winter tab')","Winter"]])}
-  ${hero("h1",[adCard("hero","dor","hero"),stat("b_bod","go('#/brand')"),adCard("hero2","bj","hero2"),stat("b_redlabel","go('#/brand')"),adCard("hero3","sony","hero3"),stat("b_bedding","out('This offer')")])}
+    [72,123,71,54,"go('#/cat/fresh')","Fresh"],[145,123,71,54,"go('#/cat/gifts')","Celebrations"],[217,123,71,54,"go('#/cat/electronics')","Electronics"],[289,123,71,54,"go('#/cat/winter')","Winter"]])}
+  ${hero("h1",[adCard("hero","dor","hero"),adCard("hero2","bj","hero2"),stat("b_bod","go('#/brand')"),adCard("hero3","can","hero3"),adCard("hero4","sony","hero4"),stat("b_redlabel","go('#/brand')")])}
   ${seg("home_mast",0,0,[T(16,95,"go('#/cat/gifts')","Gift boxes"),T(109,95,"go('#/cat/gifts')","Dry fruits and sweets"),T(201,95,"go('#/cat/electronics')","Gifting for brother"),T(294,95,"go('#/cat/gifts')","Gifting for sister"),
-    T(16,187,"out('Pooja essentials')","Pooja essentials"),T(109,187,"go('#/cat/beauty')","Festive ready"),T(201,187,"out('Festive cooking')","Festive cooking"),T(294,187,"go('#/cat/snacks')","Party time"),
+    T(16,187,"go('#/cat/pooja')","Pooja essentials"),T(109,187,"go('#/cat/beauty')","Festive ready"),T(201,187,"go('#/cat/cooking')","Festive cooking"),T(294,187,"go('#/cat/snacks')","Party time"),
     [0,283,390,58,"toast('Offer codes are not active in this demo')","Offers"]])}
   <div class="panel">${sec("Shop festive essentials", `<div class="row">${tile("truffle")}${adTile("fest","mms","fest")}${tile("ferrero")}${tile("dryfruit")}</div>`, "go('#/cat/gifts')")}</div>
-  <div class="wide" style="margin-top:14px">${showCard("disp","juice","disp",{label:"Shop beverages"})}</div>
+  <div class="wide" style="margin-top:14px">${adCard("disp","juice","disp")}</div>
   ${sec("Order again", `<div class="row">${tile("paneer")}${adTile("again","gm","again")}${tile("tomato")}${tile("yogurt")}</div>`, "go('#/again')")}
-  ${sec("Watch and shop", `<div class="row">${`<div class="adcard tcard" data-anchor="w1"><span class="adtag">Ad</span>${flick("w1","neck")}<div class="adb"><div class="br"><span class="sp">Sponsored</span></div><h4>${esc(BRANDS.neck.head)}</h4></div></div>`}${watchCard("w2","dor","w2")}${watchCard("w3","bj","w3")}<button class="more-v" onclick="go('#/watch')"><i>${I.play}</i><b>Watch more</b><span>Shop as you watch</span></button></div>`, "go('#/watch')", "Sponsored")}
+  ${sec("Watch and shop", `<div class="row">${watchCard("w1","neck","w1")}${watchCard("w2","dor","w2")}${watchCard("w3","bj","w3")}<button class="more-v" onclick="go('#/watch')"><i>${I.play}</i><b>Watch more</b><span>Shop as you watch</span></button></div>`, "go('#/watch')", "Sponsored")}
   ${shelf("shelf","bj","shelf","#1c5fa8","Which tub tonight?<br>Three flavours, one scoop away.")}
   </div>${nav("home")}</div>`;
 }
 function catsScreen(){
-  const C = (x,y,fn,l) => [x,y,82,122,fn,l], o = n => `out('${n}')`;
-  const xs = [13,107,201,295];
+  const xs = [13,107,201,295], R = (y,h,ids) => ids.map((id,i)=>[xs[i],y,82,h,`go('#/cat/${id}')`,CATS[id].name]);
   return `<div class="screen">${stpad()}<div class="top">${seg("cat_top",48,0,[[335,56,46,40,"go('#/search/')","Search"]])}</div><div class="scr" id="scr">
-  ${seg("cat_a",0,400,[...["Fruits & Veggies","Bakery & Batters","Dairy","Eggs, Meat & Fish"].map((n,i)=>C(xs[i],73,o(n),n)),
-    C(13,254,o("Atta, Rice, Dal & More")),C(107,254,o("Oil, Ghee & Masala")),C(201,254,"go('#/cat/cereals')","Dry Fruits & Cereals"),C(295,254,o("Kitchen Must-Haves"))])}
+  ${seg("cat_a",0,400,[...R(73,122,["fruits","bakery","dairy","meat"]),...R(254,122,["atta","oil","cereals","kitchen"])])}
   <div class="wide" style="margin:4px 13px 6px">${adCard("aisle","dor","aisle",{head:"Snack aisle: pick your crunch"})}</div>
-  ${seg("cat_a",400,0,[C(13,434,"go('#/cat/beverages')","Hot & Cold Beverages"),C(107,434,"go('#/cat/snacks')","Namkeen & Chips"),C(201,434,o("Biscuits & Cookies")),C(295,434,o("Instant & Frozen Food")),
-    [13,568,82,104,"go('#/cat/gifts')","Sweets & Chocolates"],[107,568,82,104,"go('#/cat/icecream')","Ice Creams & More"],[201,568,82,104,o("Sauces & Spreads")],[295,568,82,104,o("Gourmet & World Food")]])}
-  ${seg("cat_b",0,0,[[13,0,82,39,"go('#/cat/gifts')","Sweets & Chocolates"],[107,0,82,39,"go('#/cat/icecream')","Ice Creams & More"]])}
-  <div class="wide" style="margin:8px 13px 6px">${showCard("aisle2","eye","aisle2",{label:"Shop beauty"})}</div>
-  ${seg("cat_c",0,0,[C(13,38,o("Bath, Body & Oral Care")),C(107,38,o("Hair Care")),C(201,38,"go('#/cat/beauty')","Beauty & Cosmetics"),C(295,38,o("Men's Grooming")),
-    C(13,172,o("Feminine Hygiene")),C(107,172,o("Sexual Wellness")),C(201,172,o("Health & Pharmacy")),C(295,172,o("Baby Care")),[13,350,82,54,"go('#/cat/electronics')","Electronics"]])}
+  ${seg("cat_a",400,0,[...R(434,122,["beverages","snacks","biscuits","frozen"]),...R(568,104,["gifts","icecream","sauces","gourmet"])])}
+  ${seg("cat_b",0,0,R(0,39,["gifts","icecream","sauces","gourmet"]))}
+  <div class="wide" style="margin:8px 13px 6px">${adCard("aisle2","eye","aisle2")}</div>
+  ${seg("cat_c",0,0,[...R(38,122,["bath","hair","beauty","mens"]),...R(172,122,["hygiene","wellness","pharmacy","baby"]),...R(350,54,["electronics","appliances","homeneeds","toys"])])}
   </div>${nav("cats")}</div>`;
 }
 function againScreen(){
@@ -310,8 +291,8 @@ function againScreen(){
 function brandScreen(){
   const adds = (a,b) => [["add",105,157,34,34,a],["add",244,157,34,34,b]];
   return `<div class="screen">${stpad("#ecebe6")}<div class="top">${seg("brand_top",48,0,[[8,55,50,50,"back()","Back"],[332,55,50,50,"go('#/search/')","Search"]])}</div><div class="scr" id="scr" style="padding-bottom:90px">
-  <div data-anchor="store" style="position:relative"><span class="adtag" style="position:absolute;left:10px;top:10px;z-index:6">Ad</span>${flick("store","can")}</div>
   ${seg("brand_hero",58,0,[])}
+  <div class="wide" style="margin:16px 13px 18px">${adCard("store","can","store")}</div>
   ${seg("brand_a",0,0,[...adds("bru1","bru2"),[13,369,364,94,"go('#/search/coffee')","BRU range"],[340,8,40,40,"go('#/search/coffee')","See all"]])}
   ${seg("brand_b",0,0,[[13,238,364,215,"go('#/search/tea')","Red Label range"],[13,60,364,150,"go('#/search/tea')","Red Label teas"]])}
   ${seg("brand_c",0,0,[...adds("rl1","rl2"),[340,8,40,40,"go('#/search/tea')","See all"]])}
@@ -338,20 +319,20 @@ function productScreen(k, i){ const b = BRANDS[k]; if(!b || !b.retail) return pd
   <div class="kv"><h3>About the product</h3><p>${esc(b.desc)}</p></div></div>
   <div class="buybar"><button class="buy" data-buy="${k}-${i}" onclick="addToCart(this.dataset.buy)">Add to Basket</button></div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
-function catScreen(id){ if(!CATS[id]) id = "gifts"; const c = CATS[id], b = BRANDS[c.ad];
-  const adv = b.retail ? brandAd("catb",c.ad,"catb") : `<div class="wide" style="margin-bottom:14px">${showCard("catb",c.ad,"catb")}</div>`;
-  return `<div class="screen">${topBar(c.name)}<div class="scr" id="scr" style="padding-bottom:90px">
+function catScreen(id){ if(!CATS[id]) id = "gifts"; const c = CATS[id];
+  return `<div class="screen">${topBar(esc(c.name))}<div class="scr" id="scr" style="padding-bottom:90px">
   <div class="chips"><span class="chip on">All</span><span class="chip">Offers</span><span class="chip">New launches</span><span class="chip">Top rated</span></div>
-  ${adv}${c.ids.length?`<div class="grid">${c.ids.map(p=>tile(p)).join("")}</div>`:""}
-  ${sec("Order again", `<div class="grid">${AGAIN.filter(p=>!c.ids.includes(p)).map(p=>tile(p)).join("")}</div>`)}
+  ${c.ads[0]?brandAd("catb",c.ads[0],"catb"):""}${c.ids.length?`<div class="grid">${c.ids.map(p=>tile(p)).join("")}</div>`:""}
+  ${c.ads[1]?`<div style="height:14px"></div>${brandAd("catb2",c.ads[1],"catb2")}`:""}
+  ${sec(c.ids.length?"Order again":"Popular right now", `<div class="grid">${(c.ids.length?AGAIN:AGAIN.concat(["bru1","ferrero","rl1"])).filter(p=>!c.ids.includes(p)).map(p=>tile(p)).join("")}</div>`)}
   </div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 function searchKey(q){ if(!q) return ""; const all = Object.keys(SEARCH); return all.find(k=>q.includes(k) || k.includes(q)) || (Object.keys(ALIAS).find(a=>q.includes(a)) ? ALIAS[Object.keys(ALIAS).find(a=>q.includes(a))] : ""); }
 function searchScreen(q){
   q = (q||"").trim().toLowerCase(); const cfg = SEARCH[searchKey(q)]; let body;
   const sug = `<div class="sugg">${Object.keys(SEARCH).map(s=>`<button class="chip" onclick="go('#/search/${encodeURIComponent(s)}')">${I.search} ${s}</button>`).join("")}</div>`;
-  if(!q) body = `${seg("se_a",0,0,[[13,48,90,110,"out('Diwali Shopping')"],[112,48,90,110,"out('The Jewellery Collection')"],[211,48,90,110,"go('#/search/tea')","Tea and premix"],[310,48,80,110,"go('#/search/chocolate')","Chocolate gifting"]])}
-    ${hero("h2",[showCard("sban","lip","sban",{label:"Shop beauty"}),stat("b_bedding","out('This offer')"),showCard("sban2","can","sban2",{label:"Shop beverages"}),stat("b_bru","go('#/search/coffee')")])}
+  if(!q) body = `${seg("se_a",0,0,[[13,48,90,110,"go('#/cat/gifts')","Diwali Shopping"],[112,48,90,110,"go('#/cat/jewellery')","Jewellery Collection"],[211,48,90,110,"go('#/search/tea')","Tea and premix"],[310,48,80,110,"go('#/search/chocolate')","Chocolate gifting"]])}
+    ${hero("h2",[adCard("sban","lip","sban"),adCard("sban2","eye","sban2"),stat("b_bedding","out('This offer')"),adCard("sban3","mms","sban3"),stat("b_bru","go('#/search/coffee')")])}
     ${sec("Trending searches", sug)}${seg("se_b",0,190,[[13,48,364,112,"out('This collection')"]])}`;
   else { let ids = cfg ? cfg.ids : Object.keys(P).filter(id=>P[id].img && (P[id].n+" "+P[id].br).toLowerCase().includes(q));
     if(!cfg && !ids.length) body = `<div class="empty"><h3>No results for "${esc(q)}" in this demo</h3><p>Try one of these</p>${sug}</div>`;
@@ -364,7 +345,7 @@ function searchScreen(q){
   <div class="scr" id="scr" style="padding-bottom:90px">${body}</div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 // Watch and shop: a feed of shoppable videos. Each one adds the option on screen to the basket.
-const WATCH = ["dor","bj","gm","mms","sony"];
+const WATCH = ["dor","bj","juice","gm","can","mms","lip","sony","neck"];
 function watchScreen(){
   const card = k => { const b = BRANDS[k], v = b.variants[0], id = "wv_"+k;
     return `<article class="wcard" data-anchor="wv-${k}"><div class="wh">${av(k)}<div><b>${esc(b.name)}</b><span>Sponsored · ${esc(b.head)}</span></div>${dots(id)}</div>
@@ -440,7 +421,7 @@ const GUIDE = [
   ["Brand shelves", [["Home: brand shelf","#/home","shelf"],["Smart Basket: restock shelf","#/again","restock"]]],
   ["Shoppable video", [["Home: Watch and shop row","#/home","w1"],["Watch and shop page","#/watch","wv-dor"]]],
   ["Search", [["Brand ad at top of results","#/search/chips","top"],["Sponsored product inside results","#/search/chocolate","inline"]]],
-  ["Category, brand and product pages", [["Categories: aisle banner","#/cats","aisle"],["Categories: second aisle banner","#/cats","aisle2"],["Category page banner","#/cat/icecream","catb"],["Brand of the Day store","#/brand","store"],["Product page video","#/p/gm/0","pdp"]]],
+  ["Category, brand and product pages", [["Categories: aisle banner","#/cats","aisle"],["Categories: second aisle banner","#/cats","aisle2"],["Category page banner","#/cat/beverages","catb"],["Category page: second banner","#/cat/beverages","catb2"],["Brand of the Day store","#/brand","store"],["Product page video","#/p/gm/0","pdp"]]],
   ["Display cards in the feed", [["Home: display card","#/home","disp"]]]
 ];
 let curPick = "";
@@ -487,3 +468,6 @@ function fit(){ const slot = $("#phoneSlot"), phone = $("#phone");
 addEventListener("resize", fit);
 $("#flamLogo").src = FLAMLOGO; $("#bbLogo").src = BBLOGO;
 fit(); render(false);
+(function(){ const list = Object.values(BRANDS).map(b=>b.src); let i = 0;
+  const next = () => { if(i >= list.length) return; fetch(list[i++], {mode:"no-cors", credentials:"omit"}).catch(()=>{}).finally(()=>setTimeout(next, 250)); };
+  setTimeout(next, 1500); })();
