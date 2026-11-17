@@ -33,7 +33,12 @@ svg{display:block}input{font:inherit;color:inherit}
 @keyframes enterb{from{transform:translateX(-18px);opacity:.4}to{transform:none;opacity:1}}
 .stpad{height:50px;flex:none;background:var(--stbg,#fff)}
 .top{flex:none;position:relative;z-index:6}
-.scr{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;padding-bottom:150px;background:#fff}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;padding-bottom:92px;background:#fff}
+/* scroll ends just past the last thing on the screen: room only for the bottom bar and, when there is one, the basket bar */
+.hascart .scr{padding-bottom:148px}
+.nonav .scr{padding-bottom:20px}
+.nonav.hascart .scr{padding-bottom:80px}
+.nobar .scr{padding-bottom:28px!important}
 .scr::-webkit-scrollbar,.row::-webkit-scrollbar,.hero::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none}
 
 /* cuts from the real app, with tap zones */

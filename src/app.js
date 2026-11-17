@@ -32,7 +32,7 @@ function refreshAdds(){
   $$("[data-padd]").forEach(el=>{ const pid=el.dataset.padd, q=qty(pid);
     el.innerHTML = q ? `<div class="pst" onclick="event.stopPropagation()"><button aria-label="Remove one" onclick="addToCart('${pid}',-1)">${I.minus}</button><span>${q}</span><button aria-label="Add one" onclick="addToCart('${pid}',1)">${I.plus}</button></div>`
                      : `<button aria-label="Add to basket" onclick="event.stopPropagation();addToCart('${pid}',1)"></button>`; });
-  const n = cartCount();
+  const n = cartCount(); APP.classList.toggle("hascart", !!n);
   $$("[data-bbar]").forEach(el=>{ el.classList.toggle("on", !!n); el.innerHTML = `<span><b>${n} item${n>1?"s":""}</b> · ₹${num(cartTotal())}</span><b>View Basket ›</b>`; });
 }
 function addToCart(pid,n=1,quiet){ if(!P[pid]) return;
@@ -278,40 +278,40 @@ function catsScreen(){
   ${seg("cat_a",400,0,[...R(434,122,["beverages","snacks","biscuits","frozen"]),...R(568,104,["gifts","icecream","sauces","gourmet"])])}
   ${seg("cat_b",0,0,R(0,39,["gifts","icecream","sauces","gourmet"]))}
   <div class="wide" style="margin:8px 13px 6px">${adCard("aisle2","eye","aisle2")}</div>
-  ${seg("cat_c",0,0,[...R(38,122,["bath","hair","beauty","mens"]),...R(172,122,["hygiene","wellness","pharmacy","baby"]),...R(350,54,["electronics","appliances","homeneeds","toys"])])}
+  ${seg("cat_c",0,304,[...R(38,122,["bath","hair","beauty","mens"]),...R(172,122,["hygiene","wellness","pharmacy","baby"])])}
   </div>${nav("cats")}</div>`;
 }
 function againScreen(){
   return `<div class="screen">${stpad()}<div class="top">${seg("sb_top",48,0,[[335,56,46,40,"go('#/search/')","Search"]])}</div><div class="scr" id="scr">
   <div style="height:8px"></div>${brandAd("restock","gm","restock")}
-  ${seg("sb_a",0,0,[["add",193,467,34,34,"paneer"],["add",347,467,34,34,"tomato"],[146,194,82,36,"toast('We will let you know when it is back')","Notify"],[300,194,82,36,"toast('We will let you know when it is back')","Notify"],
+  ${seg("sb_a",0,622,[["add",193,467,34,34,"paneer"],["add",347,467,34,34,"tomato"],[146,194,82,36,"toast('We will let you know when it is back')","Notify"],[300,194,82,36,"toast('We will let you know when it is back')","Notify"],
     [0,120,74,560,"out('Other Smart Basket aisles')","Aisles"],[80,22,300,44,"out('Other Smart Basket aisles')","Aisles"]])}
   </div>${nav("again")}</div>`;
 }
 function brandScreen(){
   const adds = (a,b) => [["add",105,157,34,34,a],["add",244,157,34,34,b]];
-  return `<div class="screen">${stpad("#ecebe6")}<div class="top">${seg("brand_top",48,0,[[8,55,50,50,"back()","Back"],[332,55,50,50,"go('#/search/')","Search"]])}</div><div class="scr" id="scr" style="padding-bottom:90px">
+  return `<div class="screen">${stpad("#ecebe6")}<div class="top">${seg("brand_top",48,0,[[8,55,50,50,"back()","Back"],[332,55,50,50,"go('#/search/')","Search"]])}</div><div class="scr" id="scr">
   ${seg("brand_hero",58,0,[])}
   <div class="wide" style="margin:16px 13px 18px">${adCard("store","can","store")}</div>
   ${seg("brand_a",0,0,[...adds("bru1","bru2"),[13,369,364,94,"go('#/search/coffee')","BRU range"],[340,8,40,40,"go('#/search/coffee')","See all"]])}
   ${seg("brand_b",0,0,[[13,238,364,215,"go('#/search/tea')","Red Label range"],[13,60,364,150,"go('#/search/tea')","Red Label teas"]])}
-  ${seg("brand_c",0,0,[...adds("rl1","rl2"),[340,8,40,40,"go('#/search/tea')","See all"]])}
+  ${seg("brand_c",0,262,[...adds("rl1","rl2"),[340,8,40,40,"go('#/search/tea')","See all"]])}
   </div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 // The product page from the recording (Truffle Treats gift box), with a sponsored row added.
 function pdpScreen(){
-  return `<div class="screen">${stpad()}<div class="top">${seg("pdp_top",42,0,[[10,48,54,54,"back()","Back"],[288,50,44,50,"go('#/search/')","Search"],[338,50,44,50,"toast('Link copied')","Share"]])}</div><div class="scr" id="scr" style="padding-bottom:30px">
+  return `<div class="screen">${stpad()}<div class="top">${seg("pdp_top",42,0,[[10,48,54,54,"back()","Back"],[288,50,44,50,"go('#/search/')","Search"],[338,50,44,50,"toast('Link copied')","Share"]])}</div><div class="scr" id="scr">
   <div class="pmedia" style="display:flex;justify-content:center;padding:14px 0"><div class="tile" style="width:46%;padding:0;background:none"><div class="im ph" style="border-radius:14px">${pic("p_truffle","Truffle Treats Gift Box")}${addc("truffle")}</div></div></div>
   ${sec("Complete the gift", `<div class="row">${adTile("gift","mms","gift")}${tile("ferrero")}${tile("dryfruit")}</div>`, "", "Sponsored")}
   ${seg("pdp_a",0,0,[["add",93,158,34,34,"lexp",1],["add",211,158,34,34,"lindt",1],["add",330,158,34,34,"ferrero",1],[340,26,40,34,"go('#/cat/gifts')","See all"]])}
-  ${seg("pdp_b",0,0,[[13,14,364,48,"go('#/cat/gifts')","More from Lindberg"],[13,88,364,62,"go('#/cat/gifts')","More chocolates and gifts"],[13,160,364,100,"out('Ratings and reviews')","Ratings"]])}
+  ${seg("pdp_b",0,155,[[13,14,364,48,"go('#/cat/gifts')","More from Lindberg"],[13,88,364,62,"go('#/cat/gifts')","More chocolates and gifts"]])}
   </div><div class="top" style="border-top:1px solid var(--line)">${seg("pdp_foot",0,72,[["add",13,10,364,50,"truffle",1]])}</div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 const topBar = (t, extra="") => `${stpad()}<div class="stop"><button class="rbtn" onclick="back()" aria-label="Back">${I.back}</button><b>${t}</b>${extra}<button class="rbtn" onclick="go('#/search/')" aria-label="Search">${I.search}</button></div>`;
 // Product page of a Flick product: the Flick is the product media. Option chips, title, price and Add to Basket follow it.
 function productScreen(k, i){ const b = BRANDS[k]; if(!b || !b.retail) return pdpScreen(); i = Math.max(0,Math.min(i,b.variants.length-1)); const v = b.variants[i];
   const on = j => { const pid = `${k}-${j}`; $$("[data-buy]").forEach(e=>e.dataset.buy = pid); $$("[data-ol]").forEach(e=>e.textContent = b.named ? vshort(k,j) : `${j+1} of 3`); keepHash(`#/p/${k}/${j}`); };
-  return `<div class="screen">${topBar(esc(b.name))}<div class="scr" id="scr" style="padding-bottom:30px">
+  return `<div class="screen">${topBar(esc(b.name))}<div class="scr" id="scr">
   <div class="pmedia" data-anchor="pdp">${flick("pdp",k,{v:i,cta:"add",tap:false,on})}</div>
   <div class="pinfo"><span class="bchip">${esc(b.name)}</span><h1 data-sn="pdp" data-spop="pdp">${esc(vname(k,i))}</h1><div class="ppack" data-sk="pdp" style="margin-bottom:6px">${esc(vpack(k,i))}</div>
   <div style="display:flex;align-items:center;gap:8px"><div class="price" data-sp="pdp">${priceHTML(v.p,v.was)}</div><span data-so="pdp">${offHTML(v.p,v.was)}</span></div>${etaHTML(b.eta)}
@@ -320,7 +320,7 @@ function productScreen(k, i){ const b = BRANDS[k]; if(!b || !b.retail) return pd
   <div class="buybar"><button class="buy" data-buy="${k}-${i}" onclick="addToCart(this.dataset.buy)">Add to Basket</button></div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 function catScreen(id){ if(!CATS[id]) id = "gifts"; const c = CATS[id];
-  return `<div class="screen">${topBar(esc(c.name))}<div class="scr" id="scr" style="padding-bottom:90px">
+  return `<div class="screen">${topBar(esc(c.name))}<div class="scr" id="scr">
   <div class="chips"><span class="chip on">All</span><span class="chip">Offers</span><span class="chip">New launches</span><span class="chip">Top rated</span></div>
   ${c.ads[0]?brandAd("catb",c.ads[0],"catb"):""}${c.ids.length?`<div class="grid">${c.ids.map(p=>tile(p)).join("")}</div>`:""}
   ${c.ads[1]?`<div style="height:14px"></div>${brandAd("catb2",c.ads[1],"catb2")}`:""}
@@ -342,7 +342,7 @@ function searchScreen(q){
       ${t.length?`<div class="grid">${t.join("")}</div>`:""}${t.length<3?sec("Order again", `<div class="grid">${AGAIN.filter(p=>!ids.includes(p)).map(p=>tile(p)).join("")}</div>`):""}`; } }
   return `<div class="screen">${stpad()}<div class="top">${seg("se_top",42,0,[[13,54,40,50,"back()","Back"],[284,56,36,44,"out('Voice search')","Voice search"],[330,54,50,50,"out('Shopping lists')","Lists"]])}
     <input class="sinput" id="q" style="left:13.5%;top:${(64-42)/(HU("se_top")-42)*100}%;width:58%;height:${28/(HU("se_top")-42)*100}%" value="${esc(q)}" placeholder="Search 'chips'" enterkeyhint="search" autocomplete="off" aria-label="Search" onkeydown="if(event.key==='Enter')go('#/search/'+encodeURIComponent(this.value.trim()))"></div>
-  <div class="scr" id="scr" style="padding-bottom:90px">${body}</div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
+  <div class="scr" id="scr">${body}</div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 // Watch and shop: a feed of shoppable videos. Each one adds the option on screen to the basket.
 const WATCH = ["dor","bj","juice","gm","can","mms","lip","sony","neck"];
@@ -352,7 +352,7 @@ function watchScreen(){
     ${flick(id,k,{cta:"add",tap:false})}
     <div class="wb" data-spop="${id}"><div class="pname" style="min-height:0;font-size:14px" data-sn="${id}">${esc(vname(k,0))}</div><div class="price" style="font-size:18px;margin-top:4px" data-sp="${id}">${priceHTML(v.p,v.was)}</div>
     <div class="wr"><button class="cta" onclick="ctaGo('${id}')">Add to Basket</button><div class="wq">${addc(`${k}-0`,`data-sa="${id}"`)}</div><button class="cta ghost" style="height:44px" onclick="go('#/p/${k}/'+SLOTS['${id}'].v)">Details</button></div></div></article>`; };
-  return `<div class="screen">${topBar("Watch and shop")}<div class="scr" id="scr" style="padding-bottom:90px;background:var(--bg)">${WATCH.map(card).join("")}</div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
+  return `<div class="screen">${topBar("Watch and shop")}<div class="scr" id="scr" style="background:var(--bg)">${WATCH.map(card).join("")}</div><button class="bbar" data-bbar onclick="go('#/basket')"></button></div>`;
 }
 const cthumb = x => x.img ? pic(x.img) : `<span class="swb" style="background:${x.c||"#ccc"}"></span>`;
 function cartList(){ const ids = Object.keys(CART), tot = cartTotal(), mrp = Math.round(ids.reduce((a,id)=>a+(P[id].was||P[id].p)*CART[id],0)*100)/100;
@@ -361,7 +361,7 @@ function cartList(){ const ids = Object.keys(CART), tot = cartTotal(), mrp = Mat
      <div style="padding:12px 0 4px"><div class="tot"><span>Item total (MRP)</span><span>₹${num(mrp)}</span></div>${mrp>tot?`<div class="tot" style="color:var(--green)"><span>Savings</span><span>−₹${num(Math.round((mrp-tot)*100)/100)}</span></div>`:""}<div class="tot g"><span>To pay</span><span>₹${num(tot)}</span></div></div>
      <button class="buy" onclick="out('Checkout')">Proceed to checkout</button></div>`; }
 function basketScreen(){
-  return `<div class="screen">${topBar(`Review Basket`)}<div class="scr" id="scr" style="padding-bottom:40px"><div id="cartlist">${cartList()}</div>
+  return `<div class="screen">${topBar(`Review Basket`)}<div class="scr" id="scr"><div id="cartlist">${cartList()}</div>
   ${sec("Before you checkout", `<div class="row">${adTile("cart1","dor","cart1")}${adTile("cart2","mms","cart2")}${tile("ferrero")}${tile("bru1")}</div>`, "", "Sponsored")}
   ${sec("Order again", row(AGAIN))}</div></div>`;
 }
