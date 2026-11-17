@@ -668,11 +668,11 @@ function openP(pid){ const x = P[pid]; if(!x) return; if(x.brand) go(`#/p/${x.br
 
 // Sponsored product: a tile in a product row. The Flick is the product picture; price, name and + follow the option on screen.
 function adTile(id, k, anchor, w=168){ const b = BRANDS[k], v = b.variants[0];
-  return `<div class="tile" style="width:${w}px" data-anchor="${anchor}"><div class="im fl">${flick(id,k)}<span class="adtag ad">Ad</span>${addc(`${k}-0`,`data-sa="${id}"`)}</div>
+  return `<div class="tile" style="width:${w}px" data-anchor="${anchor}"><div class="im fl">${flick(id,k)}${addc(`${k}-0`,`data-sa="${id}"`)}</div>
   <div class="tb" data-spop="${id}" onclick="ctaGo('${id}')"><span data-so="${id}">${offHTML(v.p,v.was)}</span><div class="price" data-sp="${id}">${priceHTML(v.p,v.was)}</div><div class="pbr">${esc(b.name)} · Sponsored</div><div class="pname" data-sn="${id}">${esc(vname(k,0))}</div><div class="ppack" data-sk="${id}">${esc(vpack(k,0))}</div>${dots(id)}</div></div>`; }
 // Banner card: Flick on top, the app's own headline, price and button under it.
 function adCard(id, k, anchor, o={}){ const b = BRANDS[k], v = b.variants[0];
-  return `<div class="adcard ${o.cls||""}" data-anchor="${anchor}" style="${o.style||""}"><span class="adtag">Ad</span>${flick(id,k,{cta:"add"})}
+  return `<div class="adcard ${o.cls||""}" data-anchor="${anchor}" style="${o.style||""}">${flick(id,k,{cta:"add"})}
   <div class="adb" data-spop="${id}"><div><div class="br">${av(k)}${esc(b.name)}<span class="sp">Sponsored</span></div><h4 style="margin-top:6px">${esc(o.head||b.head)}</h4></div>
   <div class="vline"><span><b data-sv="${id}">${b.named?esc(vshort(k,0)):"1 of 3"}</b> · <b data-sp="${id}">${priceHTML(v.p,v.was)}</b></span>${dots(id)}</div>
   <button class="cta" onclick="ctaGo('${id}')">Add to basket</button></div></div>`; }
@@ -688,7 +688,7 @@ function brandAd(id, k, anchor){ const b = BRANDS[k];
   return `<div class="brandad" data-anchor="${anchor}"><div class="bh">${av(k)}<div><b>${esc(b.head)}</b><span>Sponsored · ${esc(b.name)}</span></div>${dots(id)}</div>${flick(id,k)}${minis(id,k)}</div>`; }
 // Video card in the Watch and shop row.
 function watchCard(id, k, anchor){ const b = BRANDS[k], v = b.variants[0];
-  return `<div class="adcard tcard" data-anchor="${anchor}"><span class="adtag">Ad</span>${flick(id,k,{cta:"add"})}
+  return `<div class="adcard tcard" data-anchor="${anchor}">${flick(id,k,{cta:"add"})}
   <div class="adb" data-spop="${id}"><div class="br">${av(k)}${esc(b.name)} ${dots(id)}</div><div class="vline"><b data-sv="${id}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${b.named?esc(vshort(k,0)):"1 of 3"}</b><b data-sp="${id}">${priceHTML(v.p)}</b></div>
   <div style="display:flex;gap:6px"><button class="cta" style="flex:1;padding:0 8px" onclick="ctaGo('${id}')">Add</button><button class="cta ghost" style="padding:0 12px" onclick="go('#/watch/${k}')" aria-label="Open in Watch and shop">${I.play}</button></div></div></div>`; }
 
