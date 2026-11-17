@@ -89,8 +89,6 @@ def main():
             piece = clean_indicators(piece)
         piece.save(os.path.join(OUT, f"{name}.jpg"), quality=80, optimize=True)
         meta[name] = {"sw": w, "sh": y1 - y0}
-    with open(os.path.join(ROOT, "src", "meta.json"), "w") as f:
-        json.dump(meta, f)
     print(f"wrote {len(meta)} pieces to {OUT}")
 
 
